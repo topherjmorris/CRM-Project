@@ -5,7 +5,7 @@ Next.js (App Router, TypeScript, Tailwind) + Supabase.
 
 ## Setup
 
-1. Install Node 22 (https://nodejs.org or `nvm install`).
+1. Install Node 24 (https://nodejs.org or `nvm install`).
 2. `npm install`
 3. Create Supabase projects (staging and production) at https://supabase.com.
 4. `cp .env.example .env.local` and fill in the URL and keys.
@@ -15,7 +15,7 @@ Next.js (App Router, TypeScript, Tailwind) + Supabase.
 
 - `app/`: routes (App Router)
 - `lib/supabase/`: browser, server and middleware clients
-- `middleware.ts`: refreshes the Supabase auth session
+- `proxy.ts`: refreshes the Supabase auth session
 - `supabase/migrations/`: SQL migrations
 - `.github/workflows/ci.yml`: lint, typecheck, build
 
