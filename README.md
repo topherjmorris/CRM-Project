@@ -26,3 +26,12 @@ Next.js (App Router, TypeScript, Tailwind) + Supabase.
 | Local | staging project or `supabase start` | `npm run dev` |
 | Staging | `smb-crm-staging` | Vercel preview deploys |
 | Production | `smb-crm-prod` | Vercel production (main) |
+
+## Database migrations
+
+SQL lives in `supabase/migrations/`. One-time setup per machine:
+
+1. `npx supabase login` (opens the browser)
+2. `npx supabase link --project-ref <ref>` (asks for the database password)
+
+Then `npm run db:push` applies new migrations and `npm run db:types` regenerates TypeScript types.
