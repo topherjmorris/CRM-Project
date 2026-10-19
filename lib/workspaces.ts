@@ -46,3 +46,9 @@ export async function createWorkspace(name: string, slug = slugify(name)): Promi
   if (error) throw error;
   return data as Workspace;
 }
+
+// The workspace for a URL slug, with the caller's role; null if missing or not a member.
+export async function getWorkspaceBySlug(slug: string): Promise<WorkspaceWithRole | null> {
+  const all = await getMyWorkspaces();
+  return all.find((w) => w.slug === slug) ?? null;
+}

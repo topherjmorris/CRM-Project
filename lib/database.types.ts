@@ -43,18 +43,21 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
         }
@@ -178,6 +181,16 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_invite: {
+        Args: { invite_token: string }
+        Returns: {
+          accepted: boolean
+          email: string
+          expired: boolean
+          role: Database["public"]["Enums"]["workspace_role"]
+          workspace_name: string
+        }[]
       }
       has_workspace_role: {
         Args: {
