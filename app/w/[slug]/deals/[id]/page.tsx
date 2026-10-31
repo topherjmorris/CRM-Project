@@ -10,6 +10,8 @@ import { formatMoney } from "@/lib/deals";
 import { getPipelines } from "@/lib/pipelines";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
+import { getTimeline } from "@/lib/activities";
+import { Timeline } from "@/components/timeline";
 import { addDealContact, deleteDeal, removeDealContact, updateDeal } from "../actions";
 
 type Props = { params: Promise<{ slug: string; id: string }> };
@@ -29,6 +31,10 @@ export default async function DealPage({ params }: Props) {
     getContactOptions(ws.id),
   ]);
   if (!d) notFound();
+  const [timeline, { data: auth }] = await Promise.all([
+    getTimeline(ws.id, { kind: "deal", id: d.id }),
+    supabase.auth.getUser(),
+  ]);
 
   const stage = pipelines.flatMap((p) => p.stages).find((s) => s.id === d.stage_id);
   const people = (links ?? []).flatMap((l) => (l.contacts ? [l.contacts] : []));
@@ -110,6 +116,7 @@ export default async function DealPage({ params }: Props) {
           savedMessage="Saved"
         />
       </section>
+      <Timeline slug={slug} subject={{ kind: "deal", id: d.id }} items={timeline} currentUserId={auth.user!.id} />
     </div>
   );
 }

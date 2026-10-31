@@ -8,6 +8,8 @@ import type { CompanyInput } from "@/lib/companies";
 import { contactName, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
+import { getTimeline } from "@/lib/activities";
+import { Timeline } from "@/components/timeline";
 import { deleteCompany, updateCompany } from "../actions";
 
 type Props = { params: Promise<{ slug: string; id: string }> };
@@ -29,6 +31,10 @@ export default async function CompanyPage({ params }: Props) {
     getMembers(ws.id),
   ]);
   if (!c) notFound();
+  const [timeline, { data: auth }] = await Promise.all([
+    getTimeline(ws.id, { kind: "company", id: c.id }),
+    supabase.auth.getUser(),
+  ]);
 
   const initial: CompanyInput = {
     name: c.name,
@@ -104,6 +110,7 @@ export default async function CompanyPage({ params }: Props) {
           savedMessage="Saved"
         />
       </section>
+      <Timeline slug={slug} subject={{ kind: "company", id: c.id }} items={timeline} currentUserId={auth.user!.id} />
     </div>
   );
 }
