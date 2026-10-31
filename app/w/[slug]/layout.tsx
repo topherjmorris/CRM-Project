@@ -1,28 +1,42 @@
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { signOut } from "@/app/login/actions";
-import { getWorkspaceBySlug } from "@/lib/workspaces";
+import { AppSidebar } from "@/components/app-sidebar";
+import { PageTitle } from "@/components/page-title";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { createClient } from "@/lib/supabase/server";
+import { getMyWorkspaces } from "@/lib/workspaces";
 
 type Props = { children: React.ReactNode; params: Promise<{ slug: string }> };
 
-// Temporary app shell until the real navigation design lands (FND-05).
 export default async function WorkspaceLayout({ children, params }: Props) {
   const { slug } = await params;
-  const ws = await getWorkspaceBySlug(slug);
+  const workspaces = await getMyWorkspaces();
+  const ws = workspaces.find((w) => w.slug === slug);
   if (!ws) notFound();
 
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", auth.user!.id).maybeSingle();
+
+  // Remember whether the sidebar was collapsed (cookie written by SidebarProvider).
+  const defaultOpen = (await cookies()).get("sidebar_state")?.value !== "false";
+
   return (
-    <div className="min-h-screen">
-      <header className="flex items-center gap-6 border-b border-neutral-200 bg-white px-4 py-3">
-        <Link href={`/w/${ws.slug}`} className="font-semibold">{ws.name}</Link>
-        <nav className="flex gap-4 text-sm text-neutral-600">
-          <Link href={`/w/${ws.slug}/settings/team`} className="hover:text-neutral-900">Team</Link>
-        </nav>
-        <form action={signOut} className="ml-auto">
-          <button className="text-sm text-neutral-600 hover:text-neutral-900">Sign out</button>
-        </form>
-      </header>
-      <div className="mx-auto max-w-4xl px-4 py-8">{children}</div>
-    </div>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppSidebar
+        workspace={{ name: ws.name, slug: ws.slug, role: ws.role }}
+        workspaces={workspaces.map((w) => ({ name: w.name, slug: w.slug, role: w.role }))}
+        user={{ email: auth.user!.email ?? "", name: profile?.full_name ?? null }}
+      />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <PageTitle slug={ws.slug} />
+        </header>
+        <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
