@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { ArrowRight, Building2, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
+import { ArrowRight, Building2, CheckCircle2, ListTodo, RotateCcw, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
 import { addNote, deleteNote, updateNote, type NoteState } from "@/app/w/[slug]/activities/actions";
 import { LocalDateTime, toLocalInput } from "@/components/local-datetime";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,9 @@ const ICONS: Record<string, LucideIcon> = {
   deal_won: Trophy,
   deal_lost: XCircle,
   deal_contact_added: Users,
+  task_created: ListTodo,
+  task_completed: CheckCircle2,
+  task_reopened: RotateCcw,
   contact_updated: Pencil,
   company_updated: Pencil,
 };
@@ -108,6 +111,20 @@ function Describe({ item, slug, subject }: { item: TimelineItem; slug: string; s
       return <>{dealLink ?? "Deal"} won · {formatMoney(Number(str(m, "value") || 0))}</>;
     case "deal_lost":
       return <>{dealLink ?? "Deal"} marked lost</>;
+    case "task_created":
+    case "task_completed":
+    case "task_reopened": {
+      const verb = item.type === "task_created" ? "Task added" : item.type === "task_completed" ? "Task completed" : "Task reopened";
+      const taskId = str(m, "task_id");
+      return (
+        <>
+          {verb}:{" "}
+          {taskId ? <Link href={`/w/${slug}/tasks/${taskId}`} className="font-medium hover:underline">{str(m, "title")}</Link> : str(m, "title")}
+          {contactLink && <> · {contactLink}</>}
+          {dealLink && <> · {dealLink}</>}
+        </>
+      );
+    }
     case "contact_updated":
       return <>{contactLink ?? "Contact"} updated</>;
     case "company_updated":

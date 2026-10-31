@@ -471,6 +471,92 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          company_id: string | null
+          completed_at: string | null
+          completed_by: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          due_at: string | null
+          id: string
+          notes: string | null
+          source: string
+          title: string
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          company_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          source?: string
+          title: string
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          assignee_id?: string | null
+          company_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          source?: string
+          title?: string
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_invites: {
         Row: {
           accepted_at: string | null
@@ -574,6 +660,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { invite_token: string }; Returns: string }
+      changed_fields: {
+        Args: { new_row: Json; old_row: Json; skip: string[] }
+        Returns: Json
+      }
       create_default_pipeline: { Args: { ws: string }; Returns: string }
       create_workspace: {
         Args: { ws_name: string; ws_slug: string }
@@ -620,6 +710,7 @@ export type Database = {
     }
     Enums: {
       stage_kind: "open" | "won" | "lost"
+      task_type: "todo" | "call" | "linkedin" | "email"
       workspace_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
@@ -752,6 +843,7 @@ export const Constants = {
   public: {
     Enums: {
       stage_kind: ["open", "won", "lost"],
+      task_type: ["todo", "call", "linkedin", "email"],
       workspace_role: ["owner", "admin", "member"],
     },
   },

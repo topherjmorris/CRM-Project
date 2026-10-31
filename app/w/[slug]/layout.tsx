@@ -10,6 +10,7 @@ import { PageTitle } from "@/components/page-title";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/server";
+import { countDueToday } from "@/lib/tasks";
 import { getMyWorkspaces } from "@/lib/workspaces";
 
 type Props = { children: React.ReactNode; params: Promise<{ slug: string }> };
@@ -22,7 +23,11 @@ export default async function WorkspaceLayout({ children, params }: Props) {
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", auth.user!.id).maybeSingle();
+  const [{ data: profile }, dueToday] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", auth.user!.id).maybeSingle(),
+    // Open tasks assigned to me that are due today or overdue: shown as a badge on Tasks.
+    countDueToday(ws.id, auth.user!.id),
+  ]);
 
   // Remember whether the sidebar was collapsed (cookie written by SidebarProvider).
   const defaultOpen = (await cookies()).get("sidebar_state")?.value !== "false";
@@ -33,6 +38,7 @@ export default async function WorkspaceLayout({ children, params }: Props) {
         workspace={{ name: ws.name, slug: ws.slug, role: ws.role }}
         workspaces={workspaces.map((w) => ({ name: w.name, slug: w.slug, role: w.role }))}
         user={{ email: auth.user!.email ?? "", name: profile?.full_name ?? null }}
+        badges={{ tasks: dueToday }}
       />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">

@@ -27,6 +27,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -40,6 +41,8 @@ type Props = {
   workspace: WorkspaceSummary;
   workspaces: WorkspaceSummary[];
   user: { email: string; name: string | null };
+  // Counts shown next to nav items, keyed by NavItem.path (e.g. { tasks: 3 }).
+  badges?: Record<string, number>;
 };
 
 function initials(text: string) {
@@ -51,7 +54,7 @@ function initials(text: string) {
     .join("");
 }
 
-export function AppSidebar({ workspace, workspaces, user }: Props) {
+export function AppSidebar({ workspace, workspaces, user, badges = {} }: Props) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const base = `/w/${workspace.slug}`;
@@ -69,6 +72,9 @@ export function AppSidebar({ workspace, workspaces, user }: Props) {
           <item.icon />
           <span>{item.title}</span>
         </SidebarMenuButton>
+        {badges[item.path] ? (
+          <SidebarMenuBadge aria-label={`${badges[item.path]} due today or overdue`}>{badges[item.path]}</SidebarMenuBadge>
+        ) : null}
       </SidebarMenuItem>
     );
   };

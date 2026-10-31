@@ -9,6 +9,9 @@ import { contactName, getCompanyNames, getMembers, type ContactInput } from "@/l
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
+import { tasksFor } from "@/lib/tasks";
+import { TaskList } from "@/components/task-list";
+import { TaskQuickAdd } from "@/components/task-quick-add";
 import { Timeline } from "@/components/timeline";
 import { deleteContact, updateContact } from "../actions";
 
@@ -26,8 +29,9 @@ export default async function ContactPage({ params }: Props) {
     getCompanyNames(ws.id),
   ]);
   if (!c) notFound();
-  const [timeline, { data: auth }] = await Promise.all([
+  const [timeline, tasks, { data: auth }] = await Promise.all([
     getTimeline(ws.id, { kind: "contact", id: c.id }),
+    tasksFor(ws.id, { kind: "contact", id: c.id }),
     supabase.auth.getUser(),
   ]);
 
@@ -76,6 +80,11 @@ export default async function ContactPage({ params }: Props) {
         submitLabel="Save changes"
         savedMessage="Saved"
       />
+      <section className="flex flex-col gap-3">
+        <h3 className="font-medium">Tasks</h3>
+        <TaskQuickAdd slug={slug} link={{ contact_id: c.id }} members={members} currentUserId={auth.user!.id} />
+        <TaskList slug={slug} tasks={tasks} hide="contact" empty="No tasks yet." />
+      </section>
       <Timeline slug={slug} subject={{ kind: "contact", id: c.id }} items={timeline} currentUserId={auth.user!.id} />
     </div>
   );
