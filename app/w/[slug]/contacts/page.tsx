@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Search, Users } from "lucide-react";
+import { FileUp, Plus, Search, Users } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -67,9 +67,14 @@ export default async function ContactsPage({ params, searchParams }: Props) {
         <span className="text-sm text-muted-foreground tabular-nums">
           {total} {total === 1 ? "contact" : "contacts"}
         </span>
-        <Link href={`${base}/new`} className={buttonVariants({ className: "ml-auto" })}>
-          <Plus /> Add contact
-        </Link>
+        <div className="ml-auto flex gap-2">
+          <Link href={`/w/${slug}/import?target=contacts`} className={buttonVariants({ variant: "outline" })}>
+            <FileUp /> Import CSV
+          </Link>
+          <Link href={`${base}/new`} className={buttonVariants()}>
+            <Plus /> Add contact
+          </Link>
+        </div>
       </div>
 
       {total === 0 ? (
@@ -80,7 +85,7 @@ export default async function ContactsPage({ params, searchParams }: Props) {
           ) : (
             <>
               <h2 className="text-lg font-semibold">No contacts yet</h2>
-              <p className="text-sm text-muted-foreground">Add your first contact. CSV import comes in a later task.</p>
+              <p className="text-sm text-muted-foreground">Add your first contact, or import a CSV from a spreadsheet or your old CRM.</p>
               <Link href={`${base}/new`} className={buttonVariants()}>
                 <Plus /> Add contact
               </Link>

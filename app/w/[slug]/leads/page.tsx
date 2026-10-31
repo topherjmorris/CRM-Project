@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Search, Settings2, UserRoundSearch } from "lucide-react";
+import { FileUp, Plus, Search, Settings2, UserRoundSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,9 @@ export default async function LeadsPage({ params, searchParams }: Props) {
         <TagFilter tags={allTags} value={tagFilter} keep={{ q, tab: tab.id }} />
         <span className="text-sm text-muted-foreground tabular-nums">{total} {total === 1 ? "lead" : "leads"}</span>
         <div className="ml-auto flex gap-2">
+          <Link href={`/w/${slug}/import?target=leads`} className={buttonVariants({ variant: "outline" })}>
+            <FileUp /> Import CSV
+          </Link>
           <Link href={`${base}/stages`} className={buttonVariants({ variant: "outline" })}>
             <Settings2 /> Stages
           </Link>

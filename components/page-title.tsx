@@ -9,5 +9,7 @@ import { ALL_NAV_ITEMS } from "@/lib/nav";
 export function PageTitle({ slug }: { slug: string }) {
   const rest = usePathname().replace(`/w/${slug}`, "").replace(/^\//, "");
   const item = ALL_NAV_ITEMS.find((i) => rest === i.path || rest.startsWith(i.path + "/"));
-  return <h1 className="truncate text-sm font-medium">{item?.title ?? "Home"}</h1>;
+  // Pages that aren't in the sidebar.
+  const extra = rest.startsWith("import") ? "Import" : null;
+  return <h1 className="truncate text-sm font-medium">{item?.title ?? extra ?? "Home"}</h1>;
 }

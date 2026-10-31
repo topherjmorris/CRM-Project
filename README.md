@@ -14,6 +14,15 @@ used: see [docs/VENDORS.md](docs/VENDORS.md).
 4. `cp .env.example .env.local` and fill in the URL and keys.
 5. `npm run dev` → http://localhost:3000
 
+## Checks
+
+`npm run check` runs lint and typecheck; it's safe while `npm run dev` is running.
+GitHub CI runs the full production build on every push.
+
+Never run `npm run build` while the dev server is up: both write to `.next` (and the build
+rewrites `next-env.d.ts`), and the dev server ends up reloading pages in a loop or serving
+stale components. If that happens, stop the dev server, delete `.next`, and start it again.
+
 ## Layout
 
 - `app/`: routes (App Router)

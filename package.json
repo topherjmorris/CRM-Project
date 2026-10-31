@@ -11,7 +11,8 @@
     "db:push": "supabase db push",
     "db:diff": "supabase db diff",
     "db:types": "supabase gen types typescript --linked > lib/database.types.ts",
-    "jobs:dev": "inngest-cli dev -u http://localhost:3000/api/inngest --no-discovery"
+    "jobs:dev": "inngest-cli dev -u http://localhost:3000/api/inngest --no-discovery",
+    "check": "npm run lint && npm run typecheck"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
