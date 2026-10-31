@@ -125,46 +125,82 @@ export type Database = {
       }
       companies: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          annual_revenue: string | null
+          city: string | null
+          company_type: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           domain: string | null
+          facebook_url: string | null
           id: string
           industry: string | null
+          instagram_url: string | null
+          linkedin_url: string | null
           name: string
           notes: string | null
           owner_id: string | null
           phone: string | null
+          postal_code: string | null
+          region: string | null
           size: string | null
           updated_at: string
           workspace_id: string
+          x_url: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_revenue?: string | null
+          city?: string | null
+          company_type?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           domain?: string | null
+          facebook_url?: string | null
           id?: string
           industry?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
           name: string
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           size?: string | null
           updated_at?: string
           workspace_id: string
+          x_url?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_revenue?: string | null
+          city?: string | null
+          company_type?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           domain?: string | null
+          facebook_url?: string | null
           id?: string
           industry?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
           name?: string
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           size?: string | null
           updated_at?: string
           workspace_id?: string
+          x_url?: string | null
         }
         Relationships: [
           {

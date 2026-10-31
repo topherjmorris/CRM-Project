@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { COMPANY_SIZES, type CompanyInput } from "@/lib/companies";
+import { COMPANY_EXTRA_FIELDS, COMPANY_SIZES, COMPANY_TYPES, REVENUE_RANGES, type CompanyInput } from "@/lib/companies";
 import type { Member } from "@/lib/contacts";
 import type { CompanyFormState } from "@/app/w/[slug]/companies/actions";
 
@@ -61,6 +61,22 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
             ))}
           </select>
         </Field>
+        <Field id="company_type" label="Type">
+          <select id="company_type" name="company_type" defaultValue={v.company_type ?? ""} className={selectClass}>
+            <option value="">Not set</option>
+            {COMPANY_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field id="annual_revenue" label="Annual revenue">
+          <select id="annual_revenue" name="annual_revenue" defaultValue={v.annual_revenue ?? ""} className={selectClass}>
+            <option value="">Unknown</option>
+            {REVENUE_RANGES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+        </Field>
         <Field id="phone" label="Phone">
           <Input id="phone" name="phone" type="tel" defaultValue={v.phone} maxLength={40} />
         </Field>
@@ -73,6 +89,27 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
           </select>
         </Field>
       </div>
+      {/* Social links and address, collapsed unless any are filled in. */}
+      <details open={COMPANY_EXTRA_FIELDS.some((f) => v[f])} className="rounded-lg border px-4 py-3 open:pb-4">
+        <summary className="cursor-pointer text-sm font-medium select-none">More details: social links, address</summary>
+        <div className="mt-4 flex flex-col gap-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field id="linkedin_url" label="LinkedIn page"><Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/company/…" /></Field>
+            <Field id="facebook_url" label="Facebook"><Input id="facebook_url" name="facebook_url" defaultValue={v.facebook_url} placeholder="facebook.com/…" /></Field>
+            <Field id="instagram_url" label="Instagram"><Input id="instagram_url" name="instagram_url" defaultValue={v.instagram_url} placeholder="instagram.com/…" /></Field>
+            <Field id="x_url" label="X (Twitter)"><Input id="x_url" name="x_url" defaultValue={v.x_url} placeholder="x.com/…" /></Field>
+          </div>
+          <fieldset className="grid gap-4 sm:grid-cols-2">
+            <legend className="mb-2 text-sm font-medium">Address</legend>
+            <div className="sm:col-span-2"><Field id="address_line1" label="Street address"><Input id="address_line1" name="address_line1" defaultValue={v.address_line1} maxLength={200} /></Field></div>
+            <div className="sm:col-span-2"><Field id="address_line2" label="Suite, floor, etc."><Input id="address_line2" name="address_line2" defaultValue={v.address_line2} maxLength={200} /></Field></div>
+            <Field id="city" label="City"><Input id="city" name="city" defaultValue={v.city} maxLength={100} /></Field>
+            <Field id="region" label="State / region"><Input id="region" name="region" defaultValue={v.region} maxLength={100} /></Field>
+            <Field id="postal_code" label="Postal code"><Input id="postal_code" name="postal_code" defaultValue={v.postal_code} maxLength={20} /></Field>
+            <Field id="country" label="Country"><Input id="country" name="country" defaultValue={v.country} maxLength={100} /></Field>
+          </fieldset>
+        </div>
+      </details>
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={4} maxLength={10000} />
       </Field>

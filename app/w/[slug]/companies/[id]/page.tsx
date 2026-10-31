@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { CompanyForm } from "@/components/company-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import type { CompanyInput } from "@/lib/companies";
+import { COMPANY_EXTRA_FIELDS, revenueLabel, typeLabel, type CompanyInput } from "@/lib/companies";
 import { contactName, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
@@ -51,6 +51,9 @@ export default async function CompanyPage({ params }: Props) {
     phone: c.phone ?? "",
     notes: c.notes ?? "",
     owner_id: c.owner_id ?? "",
+    company_type: c.company_type ?? "",
+    annual_revenue: c.annual_revenue ?? "",
+    ...Object.fromEntries(COMPANY_EXTRA_FIELDS.map((f) => [f, c[f] ?? ""])),
   };
   const contacts = people ?? [];
 
@@ -67,6 +70,8 @@ export default async function CompanyPage({ params }: Props) {
               "No website yet"
             )}
             {c.industry && <> · {c.industry}</>}
+            {typeLabel(c.company_type) && <> · {typeLabel(c.company_type)}</>}
+            {revenueLabel(c.annual_revenue) && <> · {revenueLabel(c.annual_revenue)} revenue</>}
           </p>
         </div>
         <ConfirmDeleteButton

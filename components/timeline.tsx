@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TimelineItem, TimelineSubject } from "@/lib/activities";
 import { changesOf } from "@/lib/activity-changes";
+import { revenueLabel, typeLabel } from "@/lib/companies";
 import { formatMoney } from "@/lib/deals";
 
 type Props = { slug: string; subject: TimelineSubject; items: TimelineItem[]; currentUserId: string };
@@ -69,10 +70,16 @@ const FIELD_LABELS: Record<string, string> = {
   postal_code: "Postal code",
   country: "Country",
   company_name: "Company",
+  company_type: "Type",
+  annual_revenue: "Annual revenue",
 };
 
-function show(v: unknown) {
-  return v === null || v === undefined || v === "" ? "empty" : String(v);
+// Old/new value for display; coded values (company type, revenue range) get their labels.
+function show(v: unknown, field?: string) {
+  if (v === null || v === undefined || v === "") return "empty";
+  if (field === "company_type") return typeLabel(String(v)) ?? String(v);
+  if (field === "annual_revenue") return revenueLabel(String(v)) ?? String(v);
+  return String(v);
 }
 
 function Changes({ item }: { item: TimelineItem }) {
@@ -85,7 +92,7 @@ function Changes({ item }: { item: TimelineItem }) {
           <span className="text-muted-foreground">{FIELD_LABELS[c.field] ?? c.field.replaceAll("_", " ")}:</span>{" "}
           {"to" in c ? (
             <>
-              <span className="line-through decoration-muted-foreground/60">{show(c.from)}</span> → {show(c.to)}
+              <span className="line-through decoration-muted-foreground/60">{show(c.from, c.field)}</span> → {show(c.to, c.field)}
             </>
           ) : (
             "changed"

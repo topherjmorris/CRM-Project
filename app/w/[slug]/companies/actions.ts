@@ -6,7 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { COMPANY_FIELDS, COMPANY_SIZES, normalizeDomain, type CompanyInput } from "@/lib/companies";
+import { COMPANY_FIELDS, COMPANY_SIZES, COMPANY_TYPES, companyExtraRow, normalizeDomain, REVENUE_RANGES, type CompanyInput } from "@/lib/companies";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
@@ -22,6 +22,8 @@ function validate(v: CompanyInput): string | undefined {
   if (!v.name) return "Please fill in: company name.";
   if (v.domain && !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(normalizeDomain(v.domain))) return "That website doesn't look right. Try something like acme.com.";
   if (v.size && !(COMPANY_SIZES as readonly string[]).includes(v.size)) return "Pick a company size from the list.";
+  if (v.company_type && !COMPANY_TYPES.some((t) => t.value === v.company_type)) return "Pick a company type from the list.";
+  if (v.annual_revenue && !REVENUE_RANGES.some((r) => r.value === v.annual_revenue)) return "Pick a revenue range from the list.";
 }
 
 function toRow(v: CompanyInput) {
@@ -33,10 +35,14 @@ function toRow(v: CompanyInput) {
     phone: v.phone || null,
     notes: v.notes || null,
     owner_id: v.owner_id || null,
+    company_type: v.company_type || null,
+    annual_revenue: v.annual_revenue || null,
+    ...companyExtraRow(v),
   };
 }
 
 function friendly(error: { code?: string; message: string }) {
+  if (/(linkedin_url|facebook_url|instagram_url|x_url)_check/.test(error.message)) return "One of the social links doesn't look right.";
   if (error.code === "23505") {
     return error.message.includes("domain")
       ? "Another company in this workspace already uses that website."
