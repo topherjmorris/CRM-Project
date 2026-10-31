@@ -45,13 +45,17 @@ export async function addTask(slug: string, link: TaskLink, _prev: TaskFormState
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
 
-  // A task on a contact or deal also links their company, so it shows on the company page.
-  let company_id = link.company_id ?? null;
-  if (!company_id && link.contact_id) {
-    company_id = (await supabase.from("contacts").select("company_id").eq("id", link.contact_id).single()).data?.company_id ?? null;
+  // Links: the record page's own link wins; otherwise use what was picked in the form.
+  const contact_id = link.contact_id ?? uuidOrNull(formData.get("contact_id"));
+  const deal_id = link.deal_id ?? null;
+  // With no company picked, a task on a contact or deal takes their company, so it
+  // also shows on the company page.
+  let company_id = link.company_id ?? uuidOrNull(formData.get("company_id"));
+  if (!company_id && contact_id) {
+    company_id = (await supabase.from("contacts").select("company_id").eq("id", contact_id).single()).data?.company_id ?? null;
   }
-  if (!company_id && link.deal_id) {
-    company_id = (await supabase.from("deals").select("company_id").eq("id", link.deal_id).single()).data?.company_id ?? null;
+  if (!company_id && deal_id) {
+    company_id = (await supabase.from("deals").select("company_id").eq("id", deal_id).single()).data?.company_id ?? null;
   }
 
   const { error } = await supabase.from("tasks").insert({
@@ -60,8 +64,8 @@ export async function addTask(slug: string, link: TaskLink, _prev: TaskFormState
     type,
     due_at,
     assignee_id: uuidOrNull(formData.get("assignee_id")) ?? auth.user!.id,
-    contact_id: link.contact_id ?? null,
-    deal_id: link.deal_id ?? null,
+    contact_id,
+    deal_id,
     company_id,
   });
   if (error) return { error: error.message };
@@ -98,6 +102,7 @@ export async function updateTask(slug: string, id: string, _prev: TaskFormState,
       notes: String(formData.get("notes") ?? "").trim() || null,
       assignee_id: uuidOrNull(formData.get("assignee_id")),
       contact_id: uuidOrNull(formData.get("contact_id")),
+      company_id: uuidOrNull(formData.get("company_id")),
       deal_id: uuidOrNull(formData.get("deal_id")),
     })
     .eq("id", id);

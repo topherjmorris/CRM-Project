@@ -125,7 +125,7 @@ export default async function DealPage({ params }: Props) {
       </section>
       <section className="flex flex-col gap-3">
         <h3 className="font-medium">Tasks</h3>
-        <TaskQuickAdd slug={slug} link={{ deal_id: d.id }} members={members} currentUserId={auth.user!.id} />
+        <TaskQuickAdd slug={slug} link={{ deal_id: d.id }} members={members} currentUserId={auth.user!.id} contacts={people.map((p) => ({ id: p.id, label: contactName(p) }))} />
         <TaskList slug={slug} tasks={tasks} hide="deal" empty="No tasks yet." />
       </section>
       <Timeline slug={slug} subject={{ kind: "deal", id: d.id }} items={timeline} currentUserId={auth.user!.id} />

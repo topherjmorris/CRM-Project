@@ -2,6 +2,8 @@
 
 // One-line "add a task" form: title, type, optional due date/time and assignee.
 // On a record page `link` ties the new task to that contact, company or deal.
+// Pass `contacts` and/or `companies` to show pickers for linking to other records
+// (the Tasks page shows both; a company page shows contacts, and so on).
 // The due time is typed in local time and converted to an ISO instant before sending.
 
 import { useActionState, useState } from "react";
@@ -13,7 +15,15 @@ import { TASK_TYPES, type TaskLink } from "@/lib/task-types";
 
 const selectClass = "h-8 rounded-lg border border-input bg-transparent px-2 text-sm";
 
-type Props = { slug: string; link?: TaskLink; members: Member[]; currentUserId: string };
+type Option = { id: string; label: string };
+type Props = {
+  slug: string;
+  link?: TaskLink;
+  members: Member[];
+  currentUserId: string;
+  contacts?: Option[];
+  companies?: Option[];
+};
 
 function DueField() {
   const [local, setLocal] = useState("");
@@ -25,7 +35,7 @@ function DueField() {
   );
 }
 
-export function TaskQuickAdd({ slug, link = {}, members, currentUserId }: Props) {
+export function TaskQuickAdd({ slug, link = {}, members, currentUserId, contacts, companies }: Props) {
   const [state, action, pending] = useActionState<TaskFormState, FormData>(addTask.bind(null, slug, link), {});
   // Remount after each successful add to clear the fields.
   return (
@@ -45,6 +55,26 @@ export function TaskQuickAdd({ slug, link = {}, members, currentUserId }: Props)
         </select>
         <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add task"}</Button>
       </div>
+      {(contacts || companies) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {contacts && (
+            <select name="contact_id" defaultValue="" aria-label="Link to contact" className={`${selectClass} min-w-0 max-w-full`}>
+              <option value="">No contact</option>
+              {contacts.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+          )}
+          {companies && (
+            <select name="company_id" defaultValue="" aria-label="Link to company" className={`${selectClass} min-w-0 max-w-full`}>
+              <option value="">No company (or the contact&apos;s)</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
       {state.error && <p role="alert" className="text-sm text-destructive">{state.error}</p>}
     </form>
   );

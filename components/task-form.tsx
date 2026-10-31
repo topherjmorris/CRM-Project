@@ -21,6 +21,7 @@ type Props = {
   task: Task;
   members: Member[];
   contacts: Option[];
+  companies: Option[];
   deals: Option[];
 };
 
@@ -33,7 +34,7 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-export function TaskForm({ action, task, members, contacts, deals }: Props) {
+export function TaskForm({ action, task, members, contacts, companies, deals }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [due, setDue] = useState(task.due_at ? toLocalInput(task.due_at) : "");
 
@@ -70,6 +71,14 @@ export function TaskForm({ action, task, members, contacts, deals }: Props) {
           <select id="contact_id" name="contact_id" defaultValue={task.contact_id ?? ""} className={selectClass}>
             <option value="">None</option>
             {contacts.map((c) => (
+              <option key={c.id} value={c.id}>{c.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field id="company_id" label="Company">
+          <select id="company_id" name="company_id" defaultValue={task.company_id ?? ""} className={selectClass}>
+            <option value="">None</option>
+            {companies.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>

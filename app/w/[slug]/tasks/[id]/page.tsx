@@ -7,7 +7,7 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { LocalDateTime } from "@/components/local-datetime";
 import { TaskForm } from "@/components/task-form";
 import { Button } from "@/components/ui/button";
-import { getContactOptions, getMembers } from "@/lib/contacts";
+import { getCompanyOptions, getContactOptions, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { deleteTask, setTaskDone, updateTask } from "../actions";
@@ -20,10 +20,11 @@ export default async function TaskPage({ params }: Props) {
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
-  const [{ data: task }, members, contacts, { data: deals }] = await Promise.all([
+  const [{ data: task }, members, contacts, companies, { data: deals }] = await Promise.all([
     supabase.from("tasks").select("*, contacts(first_name, last_name, email), deals(name)").eq("id", id).eq("workspace_id", ws.id).maybeSingle(),
     getMembers(ws.id),
     getContactOptions(ws.id),
+    getCompanyOptions(ws.id),
     supabase.from("deals").select("id, name").eq("workspace_id", ws.id).order("name").limit(1000),
   ]);
   if (!task) notFound();
@@ -63,6 +64,7 @@ export default async function TaskPage({ params }: Props) {
         task={t}
         members={members}
         contacts={contacts}
+        companies={companies}
         deals={(deals ?? []).map((x) => ({ id: x.id, label: x.name }))}
       />
     </div>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TaskList } from "@/components/task-list";
 import { TaskQuickAdd } from "@/components/task-quick-add";
-import { getMembers } from "@/lib/contacts";
+import { getCompanyOptions, getContactOptions, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { listTasks, type TaskView } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
@@ -31,13 +31,18 @@ export default async function TasksPage({ params, searchParams }: Props) {
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  const [tasks, members] = await Promise.all([listTasks(ws.id, auth.user!.id, view.id, who), getMembers(ws.id)]);
+  const [tasks, members, contacts, companies] = await Promise.all([
+    listTasks(ws.id, auth.user!.id, view.id, who),
+    getMembers(ws.id),
+    getContactOptions(ws.id),
+    getCompanyOptions(ws.id),
+  ]);
   const href = (v: string, w: string) => `/w/${slug}/tasks?view=${v}&who=${w}`;
   const tabClass = "rounded-md px-2.5 py-1 text-muted-foreground aria-[current=page]:bg-background aria-[current=page]:text-foreground aria-[current=page]:shadow-xs";
 
   return (
     <div className="flex flex-col gap-5">
-      <TaskQuickAdd slug={slug} members={members} currentUserId={auth.user!.id} />
+      <TaskQuickAdd slug={slug} members={members} currentUserId={auth.user!.id} contacts={contacts} companies={companies} />
       <div className="flex flex-wrap items-center gap-3">
         <nav className="flex gap-1 rounded-lg bg-muted p-1 text-sm" aria-label="Task views">
           {VIEWS.map((v) => (

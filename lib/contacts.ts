@@ -56,3 +56,10 @@ export async function getContactOptions(workspaceId: string): Promise<{ id: stri
     label: [contactName(c), c.company_name].filter(Boolean).join(" · "),
   }));
 }
+
+// Companies as { id, label } options for pickers.
+export async function getCompanyOptions(workspaceId: string): Promise<{ id: string; label: string }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("companies").select("id, name").eq("workspace_id", workspaceId).order("name").limit(1000);
+  return (data ?? []).map((c) => ({ id: c.id, label: c.name }));
+}
