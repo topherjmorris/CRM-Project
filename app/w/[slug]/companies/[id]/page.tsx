@@ -119,7 +119,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
       <section className="flex flex-col gap-3">
         <h3 className="font-medium">Tasks</h3>
-        <TaskQuickAdd slug={slug} link={{ company_id: c.id }} members={members} currentUserId={auth.user!.id} contacts={contacts.map((p) => ({ id: p.id, label: contactName(p) }))} />
+        <TaskQuickAdd slug={slug} link={{ company_id: c.id }} members={members} currentUserId={auth.user!.id} contacts={contacts.map((p) => ({ id: p.id, label: contactName(p), companyId: c.id }))} />
         <TaskList slug={slug} tasks={tasks} hide="company" empty="No tasks yet." />
       </section>
       <Timeline slug={slug} subject={{ kind: "company", id: c.id }} items={timeline} currentUserId={auth.user!.id} />

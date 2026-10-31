@@ -2,14 +2,15 @@
 
 // One-line "add a task" form: title, type, optional due date and assignee.
 // On a record page `link` ties the new task to that contact, company or deal.
-// Pass `contacts` and/or `companies` to show pickers for linking to other records
-// (the Tasks page shows both; a company page shows contacts, and so on).
+// Pass `companies` and/or `contacts` to show pickers for linking the task (the Tasks
+// page shows both; picking a company narrows the contact list to its people).
 
 import { useActionState } from "react";
 import { addTask, type TaskFormState } from "@/app/w/[slug]/tasks/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Member } from "@/lib/contacts";
+import { CompanyContactPicker } from "@/components/company-contact-picker";
+import type { ContactOption, Member } from "@/lib/contacts";
 import { TASK_TYPES, type TaskLink } from "@/lib/task-types";
 
 const selectClass = "h-8 rounded-lg border border-input bg-transparent px-2 text-sm";
@@ -20,7 +21,7 @@ type Props = {
   link?: TaskLink;
   members: Member[];
   currentUserId: string;
-  contacts?: Option[];
+  contacts?: ContactOption[];
   companies?: Option[];
 };
 
@@ -45,26 +46,7 @@ export function TaskQuickAdd({ slug, link = {}, members, currentUserId, contacts
         </select>
         <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add task"}</Button>
       </div>
-      {(contacts || companies) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {contacts && (
-            <select name="contact_id" defaultValue="" aria-label="Link to contact" className={`${selectClass} min-w-0 max-w-full`}>
-              <option value="">No contact</option>
-              {contacts.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-          )}
-          {companies && (
-            <select name="company_id" defaultValue="" aria-label="Link to company" className={`${selectClass} min-w-0 max-w-full`}>
-              <option value="">No company (or the contact&apos;s)</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-          )}
-        </div>
-      )}
+      {(contacts || companies) && <CompanyContactPicker companies={companies} contacts={contacts} />}
       {state.error && <p role="alert" className="text-sm text-destructive">{state.error}</p>}
     </form>
   );

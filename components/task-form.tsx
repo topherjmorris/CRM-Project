@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TaskFormState } from "@/app/w/[slug]/tasks/actions";
-import type { Member } from "@/lib/contacts";
+import { CompanyContactPicker } from "@/components/company-contact-picker";
+import type { ContactOption, Member } from "@/lib/contacts";
 import { TASK_TYPES, type Task } from "@/lib/task-types";
 
 const selectClass = "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm";
@@ -19,7 +20,7 @@ type Props = {
   action: (prev: TaskFormState, formData: FormData) => Promise<TaskFormState>;
   task: Task;
   members: Member[];
-  contacts: Option[];
+  contacts: ContactOption[];
   companies: Option[];
   deals: Option[];
 };
@@ -65,22 +66,7 @@ export function TaskForm({ action, task, members, contacts, companies, deals }: 
             ))}
           </select>
         </Field>
-        <Field id="contact_id" label="Contact">
-          <select id="contact_id" name="contact_id" defaultValue={task.contact_id ?? ""} className={selectClass}>
-            <option value="">None</option>
-            {contacts.map((c) => (
-              <option key={c.id} value={c.id}>{c.label}</option>
-            ))}
-          </select>
-        </Field>
-        <Field id="company_id" label="Company">
-          <select id="company_id" name="company_id" defaultValue={task.company_id ?? ""} className={selectClass}>
-            <option value="">None</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>{c.label}</option>
-            ))}
-          </select>
-        </Field>
+        <CompanyContactPicker companies={companies} contacts={contacts} defaultCompanyId={task.company_id} defaultContactId={task.contact_id} labelled />
         <Field id="deal_id" label="Deal">
           <select id="deal_id" name="deal_id" defaultValue={task.deal_id ?? ""} className={selectClass}>
             <option value="">None</option>
