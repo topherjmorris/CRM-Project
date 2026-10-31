@@ -39,6 +39,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      contacts: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string
+          id: string
+          job_title: string | null
+          last_name: string
+          lead_score: number
+          linkedin_url: string | null
+          notes: string | null
+          owner_id: string | null
+          phone: string | null
+          source: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          lead_score?: number
+          linkedin_url?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          lead_score?: number
+          linkedin_url?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -192,14 +257,6 @@ export type Database = {
           workspace_name: string
         }[]
       }
-      my_pending_invites: {
-        Args: never
-        Returns: {
-          role: Database["public"]["Enums"]["workspace_role"]
-          token: string
-          workspace_name: string
-        }[]
-      }
       has_workspace_role: {
         Args: {
           roles: Database["public"]["Enums"]["workspace_role"][]
@@ -208,6 +265,14 @@ export type Database = {
         Returns: boolean
       }
       is_workspace_member: { Args: { ws: string }; Returns: boolean }
+      my_pending_invites: {
+        Args: never
+        Returns: {
+          role: Database["public"]["Enums"]["workspace_role"]
+          token: string
+          workspace_name: string
+        }[]
+      }
     }
     Enums: {
       workspace_role: "owner" | "admin" | "member"

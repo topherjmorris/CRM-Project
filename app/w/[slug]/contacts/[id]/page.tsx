@@ -1,0 +1,61 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ContactForm } from "@/components/contact-form";
+import { DeleteContactButton } from "@/components/delete-contact-button";
+import { contactName, getMembers, type ContactInput } from "@/lib/contacts";
+import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceBySlug } from "@/lib/workspaces";
+import { deleteContact, updateContact } from "../actions";
+
+type Props = { params: Promise<{ slug: string; id: string }> };
+
+export default async function ContactPage({ params }: Props) {
+  const { slug, id } = await params;
+  const ws = await getWorkspaceBySlug(slug);
+  if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+
+  const supabase = await createClient();
+  const [{ data: c }, members] = await Promise.all([
+    supabase.from("contacts").select("*").eq("id", id).eq("workspace_id", ws.id).maybeSingle(),
+    getMembers(ws.id),
+  ]);
+  if (!c) notFound();
+
+  const name = contactName(c);
+  const initial: ContactInput = {
+    first_name: c.first_name,
+    last_name: c.last_name,
+    email: c.email ?? "",
+    phone: c.phone ?? "",
+    job_title: c.job_title ?? "",
+    company_name: c.company_name ?? "",
+    linkedin_url: c.linkedin_url ?? "",
+    notes: c.notes ?? "",
+    owner_id: c.owner_id ?? "",
+  };
+
+  return (
+    <div className="flex max-w-2xl flex-col gap-6">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-0 flex-1">
+          <Link href={`/w/${slug}/contacts`} className="text-sm text-muted-foreground hover:underline">← Contacts</Link>
+          <h2 className="mt-1 truncate text-2xl font-semibold">{name}</h2>
+          <p className="text-sm text-muted-foreground">
+            {[c.job_title, c.company_name].filter(Boolean).join(" at ") || "No title or company yet"} · Added{" "}
+            {new Date(c.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
+          </p>
+        </div>
+        <DeleteContactButton name={name} action={deleteContact.bind(null, slug, c.id)} />
+      </div>
+      <ContactForm
+        key={c.updated_at}
+        action={updateContact.bind(null, slug, c.id)}
+        initial={initial}
+        members={members}
+        submitLabel="Save changes"
+        savedMessage="Saved"
+      />
+      <p className="text-xs text-muted-foreground">The activity timeline arrives with CRM-04.</p>
+    </div>
+  );
+}
