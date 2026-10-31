@@ -14,6 +14,20 @@ function readForm(formData: FormData): ContactInput {
   return v;
 }
 
+const REQUIRED: [keyof ContactInput, string][] = [
+  ["first_name", "first name"],
+  ["last_name", "last name"],
+  ["email", "email"],
+  ["company_name", "company"],
+];
+
+// Contacts added by hand need all four. Imports and ad leads may arrive with gaps,
+// so the database itself stays looser.
+function missing(v: ContactInput) {
+  const gaps = REQUIRED.filter(([f]) => !v[f]).map(([, label]) => label);
+  return gaps.length ? `Please fill in: ${gaps.join(", ")}.` : undefined;
+}
+
 function toRow(v: ContactInput) {
   let linkedin = v.linkedin_url || null;
   if (linkedin && !/^https?:\/\//i.test(linkedin)) linkedin = `https://${linkedin}`;
@@ -39,6 +53,8 @@ function friendly(error: { code?: string; message: string }) {
 
 export async function createContact(slug: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const values = readForm(formData);
+  const gap = missing(values);
+  if (gap) return { error: gap, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
 
@@ -56,6 +72,8 @@ export async function createContact(slug: string, _prev: FormState, formData: Fo
 
 export async function updateContact(slug: string, id: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const values = readForm(formData);
+  const gap = missing(values);
+  if (gap) return { error: gap, values };
   const supabase = await createClient();
   const { error } = await supabase.from("contacts").update(toRow(values)).eq("id", id);
   if (error) return { error: friendly(error), values };

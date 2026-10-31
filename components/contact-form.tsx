@@ -16,10 +16,13 @@ type Props = {
   savedMessage?: string;
 };
 
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+function Field({ id, label, required, children }: { id: string; label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="text-destructive" aria-hidden="true">*</span>}
+      </Label>
       {children}
     </div>
   );
@@ -36,14 +39,14 @@ export function ContactForm({ action, initial, members, submitLabel, savedMessag
         <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="first_name" label="First name">
-          <Input id="first_name" name="first_name" defaultValue={v.first_name} maxLength={100} autoComplete="off" />
+        <Field id="first_name" label="First name" required>
+          <Input id="first_name" name="first_name" required defaultValue={v.first_name} maxLength={100} autoComplete="off" />
         </Field>
-        <Field id="last_name" label="Last name">
-          <Input id="last_name" name="last_name" defaultValue={v.last_name} maxLength={100} autoComplete="off" />
+        <Field id="last_name" label="Last name" required>
+          <Input id="last_name" name="last_name" required defaultValue={v.last_name} maxLength={100} autoComplete="off" />
         </Field>
-        <Field id="email" label="Email">
-          <Input id="email" name="email" type="email" defaultValue={v.email} autoComplete="off" />
+        <Field id="email" label="Email" required>
+          <Input id="email" name="email" required type="email" defaultValue={v.email} autoComplete="off" />
         </Field>
         <Field id="phone" label="Phone">
           <Input id="phone" name="phone" type="tel" defaultValue={v.phone} maxLength={40} autoComplete="off" />
@@ -51,8 +54,8 @@ export function ContactForm({ action, initial, members, submitLabel, savedMessag
         <Field id="job_title" label="Job title">
           <Input id="job_title" name="job_title" defaultValue={v.job_title} maxLength={120} />
         </Field>
-        <Field id="company_name" label="Company">
-          <Input id="company_name" name="company_name" defaultValue={v.company_name} maxLength={200} />
+        <Field id="company_name" label="Company" required>
+          <Input id="company_name" name="company_name" required defaultValue={v.company_name} maxLength={200} />
         </Field>
         <Field id="linkedin_url" label="LinkedIn URL">
           <Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/in/…" />
