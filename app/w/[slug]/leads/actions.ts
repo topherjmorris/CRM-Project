@@ -11,11 +11,12 @@ import { redirect } from "next/navigation";
 import { detailError, detailRow, LEAD_FIELDS, readDetail, type LeadInput } from "@/lib/leads";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
+import { readCustomFor } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
 
-export type LeadFormState = { error?: string; values?: LeadInput };
+export type LeadFormState = { error?: string; values?: LeadInput; custom?: Record<string, string> };
 
 function readForm(formData: FormData): LeadInput {
   const v: LeadInput = {};
@@ -66,12 +67,14 @@ export async function createLead(slug: string, _prev: LeadFormState, formData: F
   if (invalid) return { error: invalid, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "lead", formData);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const supabase = await createClient();
   // stage_id is filled in by a trigger when empty; the cast covers that for the types.
   const { data, error } = await supabase
     .from("leads")
-    .insert({ ...toRow(values), workspace_id: ws.id } as LeadInsert)
+    .insert({ ...toRow(values), custom: cf.values, workspace_id: ws.id } as LeadInsert)
     .select("id")
     .single();
   if (error) return { error: friendly(error), values };
@@ -83,9 +86,13 @@ export async function updateLead(slug: string, id: string, _prev: LeadFormState,
   const values = readForm(formData);
   const invalid = validate(values);
   if (invalid) return { error: invalid, values };
+  const ws = await getWorkspaceBySlug(slug);
+  if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "lead", formData, id);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
   const supabase = await createClient();
   // Converted leads are read-only; the filter keeps an old tab from editing one.
-  const { error } = await supabase.from("leads").update(toRow(values)).eq("id", id).neq("stage_kind", "converted");
+  const { error } = await supabase.from("leads").update({ ...toRow(values), custom: cf.values }).eq("id", id).neq("stage_kind", "converted");
   if (error) return { error: friendly(error), values };
   refresh(slug);
   return { values };

@@ -133,6 +133,7 @@ export type Database = {
           country: string | null
           created_at: string
           created_by: string | null
+          custom: Json
           domain: string | null
           facebook_url: string | null
           id: string
@@ -159,6 +160,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           domain?: string | null
           facebook_url?: string | null
           id?: string
@@ -185,6 +187,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           domain?: string | null
           facebook_url?: string | null
           id?: string
@@ -222,6 +225,7 @@ export type Database = {
           country: string | null
           created_at: string
           created_by: string | null
+          custom: Json
           email: string | null
           facebook_url: string | null
           first_name: string
@@ -254,6 +258,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           email?: string | null
           facebook_url?: string | null
           first_name?: string
@@ -286,6 +291,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           email?: string | null
           facebook_url?: string | null
           first_name?: string
@@ -319,6 +325,50 @@ export type Database = {
           },
           {
             foreignKeyName: "contacts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_fields: {
+        Row: {
+          created_at: string
+          entity: Database["public"]["Enums"]["custom_entity"]
+          id: string
+          key: string
+          label: string
+          options: string[]
+          position: number
+          type: Database["public"]["Enums"]["custom_field_type"]
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity: Database["public"]["Enums"]["custom_entity"]
+          id?: string
+          key: string
+          label: string
+          options?: string[]
+          position?: number
+          type: Database["public"]["Enums"]["custom_field_type"]
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          entity?: Database["public"]["Enums"]["custom_entity"]
+          id?: string
+          key?: string
+          label?: string
+          options?: string[]
+          position?: number
+          type?: Database["public"]["Enums"]["custom_field_type"]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_fields_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -377,6 +427,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          custom: Json
           id: string
           name: string
           notes: string | null
@@ -395,6 +446,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          custom?: Json
           id?: string
           name: string
           notes?: string | null
@@ -413,6 +465,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          custom?: Json
           id?: string
           name?: string
           notes?: string | null
@@ -501,6 +554,7 @@ export type Database = {
           country: string | null
           created_at: string
           created_by: string | null
+          custom: Json
           email: string | null
           facebook_url: string | null
           first_name: string
@@ -535,6 +589,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           email?: string | null
           facebook_url?: string | null
           first_name?: string
@@ -569,6 +624,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           created_by?: string | null
+          custom?: Json
           email?: string | null
           facebook_url?: string | null
           first_name?: string
@@ -972,6 +1028,14 @@ export type Database = {
       }
     }
     Enums: {
+      custom_entity: "lead" | "contact" | "company" | "deal"
+      custom_field_type:
+        | "text"
+        | "number"
+        | "date"
+        | "select"
+        | "checkbox"
+        | "url"
       lead_stage_kind: "open" | "unqualified" | "converted"
       stage_kind: "open" | "won" | "lost"
       task_type: "todo" | "call" | "linkedin" | "email"
@@ -1106,6 +1170,15 @@ export const Constants = {
   },
   public: {
     Enums: {
+      custom_entity: ["lead", "contact", "company", "deal"],
+      custom_field_type: [
+        "text",
+        "number",
+        "date",
+        "select",
+        "checkbox",
+        "url",
+      ],
       lead_stage_kind: ["open", "unqualified", "converted"],
       stage_kind: ["open", "won", "lost"],
       task_type: ["todo", "call", "linkedin", "email"],

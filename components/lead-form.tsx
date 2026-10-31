@@ -4,6 +4,8 @@
 // what was typed when the server returns an error.
 
 import { useActionState } from "react";
+import { CustomFieldsSection } from "@/components/custom-fields-section";
+import type { CustomFieldDef } from "@/lib/custom-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +21,9 @@ type Props = {
   members: Member[];
   // Stages a person can pick: open and unqualified (Converted is set by Convert).
   stages: LeadStage[];
+  // Workspace custom fields for this record type, and their current values as strings.
+  customDefs?: CustomFieldDef[];
+  customValues?: Record<string, string>;
   submitLabel: string;
   savedMessage?: string;
 };
@@ -37,7 +42,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage }: Props) {
+export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -92,6 +97,7 @@ export function LeadForm({ action, initial, members, stages, submitLabel, savedM
       </div>
       <p className="-mt-2 text-xs text-muted-foreground">An email or a phone number is required.</p>
       <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
+      <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={3} maxLength={10000} />
       </Field>

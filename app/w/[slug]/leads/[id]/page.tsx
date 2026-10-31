@@ -15,6 +15,8 @@ import { getMembers } from "@/lib/contacts";
 import { getLeadStages } from "@/lib/lead-stages";
 import { detailInput, leadName, sourceLabel, type LeadInput } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
+import { getCustomFields } from "@/lib/custom-fields-server";
+import { customToInputs } from "@/lib/custom-fields";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { deleteLead, updateLead } from "../actions";
 
@@ -24,6 +26,7 @@ export default async function LeadPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  const customDefs = await getCustomFields(ws.id, "lead");
 
   const supabase = await createClient();
   const [{ data: l }, members, stages] = await Promise.all([
@@ -90,7 +93,7 @@ export default async function LeadPage({ params }: Props) {
       ) : (
         <section className="flex flex-col gap-3">
           <h3 className="font-medium">Details</h3>
-          <LeadForm key={l.updated_at} action={updateLead.bind(null, slug, l.id)} initial={initial} members={members} stages={stages.filter((s) => s.kind !== "converted")} submitLabel="Save changes" savedMessage="Saved" />
+          <LeadForm customDefs={customDefs} customValues={customToInputs(customDefs, l.custom)} key={l.updated_at} action={updateLead.bind(null, slug, l.id)} initial={initial} members={members} stages={stages.filter((s) => s.kind !== "converted")} submitLabel="Save changes" savedMessage="Saved" />
         </section>
       )}
 

@@ -39,6 +39,6 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   },
 ];
 
-export const SETTINGS_ITEM: NavItem = { title: "Settings", path: "settings/team", icon: Settings };
+export const SETTINGS_ITEM: NavItem = { title: "Settings", path: "settings", icon: Settings };
 
 export const ALL_NAV_ITEMS = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_ITEM];

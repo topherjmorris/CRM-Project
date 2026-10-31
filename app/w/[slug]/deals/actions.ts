@@ -7,10 +7,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { readCustomFor } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 export type DealInput = Partial<Record<"name" | "value" | "close_date" | "stage_id" | "company_name" | "owner_id" | "notes", string>>;
-export type DealFormState = { error?: string; values?: DealInput };
+export type DealFormState = { error?: string; values?: DealInput; custom?: Record<string, string> };
 
 const FIELDS = ["name", "value", "close_date", "stage_id", "company_name", "owner_id", "notes"] as const;
 
@@ -66,6 +67,8 @@ export async function createDeal(slug: string, _prev: DealFormState, formData: F
   if (invalid) return { error: invalid, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "deal", formData);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const supabase = await createClient();
   // New deals go to the top of their column.
@@ -73,7 +76,7 @@ export async function createDeal(slug: string, _prev: DealFormState, formData: F
   const { data, error } = await supabase
     .from("deals")
     // pipeline_id is set from the stage by a trigger; the placeholder satisfies the type.
-    .insert({ ...(await toRow(ws.id, values)), workspace_id: ws.id, pipeline_id: "00000000-0000-0000-0000-000000000000", position: (top?.position ?? 1) - 1 })
+    .insert({ ...(await toRow(ws.id, values)), custom: cf.values, workspace_id: ws.id, pipeline_id: "00000000-0000-0000-0000-000000000000", position: (top?.position ?? 1) - 1 })
     .select("id")
     .single();
   if (error) return { error: error.message, values };
@@ -91,9 +94,11 @@ export async function updateDeal(slug: string, id: string, _prev: DealFormState,
   if (invalid) return { error: invalid, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "deal", formData, id);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("deals").update(await toRow(ws.id, values)).eq("id", id);
+  const { error } = await supabase.from("deals").update({ ...(await toRow(ws.id, values)), custom: cf.values }).eq("id", id);
   if (error) return { error: error.message, values };
   refresh(slug);
   return { values };

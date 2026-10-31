@@ -4,6 +4,8 @@
 "use client";
 
 import { useActionState } from "react";
+import { CustomFieldsSection } from "@/components/custom-fields-section";
+import type { CustomFieldDef } from "@/lib/custom-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +20,9 @@ type Props = {
   initial: ContactInput;
   members: Member[];
   companies: string[];
+  // Workspace custom fields for this record type, and their current values as strings.
+  customDefs?: CustomFieldDef[];
+  customValues?: Record<string, string>;
   submitLabel: string;
   savedMessage?: string;
 };
@@ -34,7 +39,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function ContactForm({ action, initial, members, companies, submitLabel, savedMessage }: Props) {
+export function ContactForm({ action, initial, members, companies, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -86,6 +91,7 @@ export function ContactForm({ action, initial, members, companies, submitLabel, 
         </Field>
       </div>
       <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
+      <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={4} maxLength={10000} />
       </Field>

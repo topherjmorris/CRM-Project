@@ -8,6 +8,8 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { contactName, getCompanyNames, getMembers, type ContactInput } from "@/lib/contacts";
 import { detailInput } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
+import { getCustomFields } from "@/lib/custom-fields-server";
+import { customToInputs } from "@/lib/custom-fields";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
 import { tasksFor } from "@/lib/tasks";
@@ -22,6 +24,7 @@ export default async function ContactPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  const customDefs = await getCustomFields(ws.id, "contact");
 
   const supabase = await createClient();
   const [{ data: c }, members, companies] = await Promise.all([
@@ -74,6 +77,8 @@ export default async function ContactPage({ params }: Props) {
         />
       </div>
       <ContactForm
+        customDefs={customDefs}
+        customValues={customToInputs(customDefs, c.custom)}
         key={c.updated_at}
         action={updateContact.bind(null, slug, c.id)}
         initial={initial}

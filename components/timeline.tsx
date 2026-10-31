@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { TimelineItem, TimelineSubject } from "@/lib/activities";
 import { changesOf } from "@/lib/activity-changes";
 import { revenueLabel, typeLabel } from "@/lib/companies";
+import { customFieldLabel } from "@/lib/custom-fields";
 import { formatMoney } from "@/lib/deals";
 
 type Props = { slug: string; subject: TimelineSubject; items: TimelineItem[]; currentUserId: string };
@@ -79,6 +80,7 @@ function show(v: unknown, field?: string) {
   if (v === null || v === undefined || v === "") return "empty";
   if (field === "company_type") return typeLabel(String(v)) ?? String(v);
   if (field === "annual_revenue") return revenueLabel(String(v)) ?? String(v);
+  if (typeof v === "boolean") return v ? "Yes" : "No";
   return String(v);
 }
 
@@ -89,7 +91,7 @@ function Changes({ item }: { item: TimelineItem }) {
     <ul className="mt-1.5 flex flex-col gap-0.5 rounded-md bg-muted/60 px-3 py-2 text-sm">
       {changes.map((c) => (
         <li key={c.field} className="break-words">
-          <span className="text-muted-foreground">{FIELD_LABELS[c.field] ?? c.field.replaceAll("_", " ")}:</span>{" "}
+          <span className="text-muted-foreground">{c.field.startsWith("custom.") ? customFieldLabel(c.field) : (FIELD_LABELS[c.field] ?? c.field.replaceAll("_", " "))}:</span>{" "}
           {"to" in c ? (
             <>
               <span className="line-through decoration-muted-foreground/60">{show(c.from, c.field)}</span> → {show(c.to, c.field)}

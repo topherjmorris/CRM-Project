@@ -12,6 +12,8 @@ import { contactName, getCompanyNames, getContactOptions, getMembers } from "@/l
 import { formatMoney } from "@/lib/deals";
 import { getPipelines } from "@/lib/pipelines";
 import { createClient } from "@/lib/supabase/server";
+import { getCustomFields } from "@/lib/custom-fields-server";
+import { customToInputs } from "@/lib/custom-fields";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
 import { tasksFor } from "@/lib/tasks";
@@ -26,6 +28,7 @@ export default async function DealPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  const customDefs = await getCustomFields(ws.id, "deal");
 
   const supabase = await createClient();
   const [{ data: d }, { data: links }, pipelines, members, companies, contactOptions] = await Promise.all([
@@ -105,6 +108,8 @@ export default async function DealPage({ params }: Props) {
       <section className="flex flex-col gap-3">
         <h3 className="font-medium">Details</h3>
         <DealForm
+        customDefs={customDefs}
+        customValues={customToInputs(customDefs, d.custom)}
           key={d.updated_at}
           action={updateDeal.bind(null, slug, d.id)}
           initial={{

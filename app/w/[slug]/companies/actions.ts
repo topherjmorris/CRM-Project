@@ -8,9 +8,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { COMPANY_FIELDS, COMPANY_SIZES, COMPANY_TYPES, companyExtraRow, normalizeDomain, REVENUE_RANGES, type CompanyInput } from "@/lib/companies";
 import { createClient } from "@/lib/supabase/server";
+import { readCustomFor } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
-export type CompanyFormState = { error?: string; values?: CompanyInput };
+export type CompanyFormState = { error?: string; values?: CompanyInput; custom?: Record<string, string> };
 
 function readForm(formData: FormData): CompanyInput {
   const v: CompanyInput = {};
@@ -62,11 +63,13 @@ export async function createCompany(slug: string, _prev: CompanyFormState, formD
   if (invalid) return { error: invalid, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "company", formData);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("companies")
-    .insert({ ...toRow(values), workspace_id: ws.id })
+    .insert({ ...toRow(values), custom: cf.values, workspace_id: ws.id })
     .select("id")
     .single();
   if (error) return { error: friendly(error), values };
@@ -79,9 +82,13 @@ export async function updateCompany(slug: string, id: string, _prev: CompanyForm
   const values = readForm(formData);
   const invalid = validate(values);
   if (invalid) return { error: invalid, values };
+  const ws = await getWorkspaceBySlug(slug);
+  if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "company", formData, id);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("companies").update(toRow(values)).eq("id", id);
+  const { error } = await supabase.from("companies").update({ ...toRow(values), custom: cf.values }).eq("id", id);
   if (error) return { error: friendly(error), values };
 
   refresh(slug);

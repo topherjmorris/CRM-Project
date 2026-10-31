@@ -10,9 +10,11 @@ import { redirect } from "next/navigation";
 import { CONTACT_FIELDS, type ContactInput } from "@/lib/contacts";
 import { detailError, detailRow, readDetail } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
+import { readCustomFor } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
-export type FormState = { error?: string; values?: ContactInput };
+// `custom` holds what was typed in custom fields, to show again after an error.
+export type FormState = { error?: string; values?: ContactInput; custom?: Record<string, string> };
 
 function readForm(formData: FormData): ContactInput {
   const v: ContactInput = {};
@@ -83,15 +85,17 @@ export async function createContact(slug: string, _prev: FormState, formData: Fo
   if (gap) return { error: gap, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "contact", formData);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
 
   const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contacts")
-    .insert({ ...toRow(values), company_id, workspace_id: ws.id })
+    .insert({ ...toRow(values), company_id, custom: cf.values, workspace_id: ws.id })
     .select("id")
     .single();
-  if (error) return { error: friendly(error), values };
+  if (error) return { error: friendly(error), values, custom: cf.raw };
 
   revalidatePath(`/w/${slug}/contacts`);
   redirect(`/w/${slug}/contacts/${data.id}`);
@@ -103,10 +107,12 @@ export async function updateContact(slug: string, id: string, _prev: FormState, 
   if (gap) return { error: gap, values };
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
+  const cf = await readCustomFor(ws.id, "contact", formData, id);
+  if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
   const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
-  const { error } = await supabase.from("contacts").update({ ...toRow(values), company_id }).eq("id", id);
-  if (error) return { error: friendly(error), values };
+  const { error } = await supabase.from("contacts").update({ ...toRow(values), company_id, custom: cf.values }).eq("id", id);
+  if (error) return { error: friendly(error), values, custom: cf.raw };
 
   revalidatePath(`/w/${slug}/contacts`);
   revalidatePath(`/w/${slug}/contacts/${id}`);
