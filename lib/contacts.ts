@@ -39,3 +39,18 @@ export async function getCompanyNames(workspaceId: string): Promise<string[]> {
   const { data } = await supabase.from("companies").select("name").eq("workspace_id", workspaceId).order("name").limit(1000);
   return (data ?? []).map((c) => c.name);
 }
+
+// Contacts as "Name (email)" options for pickers.
+export async function getContactOptions(workspaceId: string): Promise<{ id: string; label: string }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("contacts")
+    .select("id, first_name, last_name, email, company_name")
+    .eq("workspace_id", workspaceId)
+    .order("first_name")
+    .limit(1000);
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    label: [contactName(c), c.company_name].filter(Boolean).join(" · "),
+  }));
+}
