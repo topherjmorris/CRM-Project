@@ -14,12 +14,14 @@ export type TaskFormState = { error?: string; ok?: number };
 
 const TYPES = TASK_TYPES.map((t) => t.value);
 
+// Due dates are calendar days ("YYYY-MM-DD" from <input type="date">); empty = none.
+// Returns undefined for anything that isn't a real date.
 function readDue(formData: FormData): string | null | undefined {
-  // The browser sends an ISO instant (converted from local time); empty = no due date.
-  const raw = String(formData.get("due_at") ?? "");
+  const raw = String(formData.get("due_date") ?? "");
   if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return undefined;
+  const d = new Date(raw + "T00:00:00Z");
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== raw ? undefined : raw;
 }
 
 function uuidOrNull(v: FormDataEntryValue | null | undefined) {
@@ -35,10 +37,10 @@ function refresh(slug: string) {
 export async function addTask(slug: string, link: TaskLink, _prev: TaskFormState, formData: FormData): Promise<TaskFormState> {
   const title = String(formData.get("title") ?? "").trim();
   const type = String(formData.get("type") ?? "todo") as TaskType;
-  const due_at = readDue(formData);
+  const due_date = readDue(formData);
   if (!title) return { error: "Give the task a title." };
   if (!TYPES.includes(type)) return { error: "Pick a task type." };
-  if (due_at === undefined) return { error: "That due date isn't valid." };
+  if (due_date === undefined) return { error: "That due date isn't valid." };
 
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found." };
@@ -62,7 +64,7 @@ export async function addTask(slug: string, link: TaskLink, _prev: TaskFormState
     workspace_id: ws.id,
     title,
     type,
-    due_at,
+    due_date,
     assignee_id: uuidOrNull(formData.get("assignee_id")) ?? auth.user!.id,
     contact_id,
     deal_id,
@@ -87,10 +89,10 @@ export async function setTaskDone(slug: string, id: string, done: boolean) {
 export async function updateTask(slug: string, id: string, _prev: TaskFormState, formData: FormData): Promise<TaskFormState> {
   const title = String(formData.get("title") ?? "").trim();
   const type = String(formData.get("type") ?? "todo") as TaskType;
-  const due_at = readDue(formData);
+  const due_date = readDue(formData);
   if (!title) return { error: "Give the task a title." };
   if (!TYPES.includes(type)) return { error: "Pick a task type." };
-  if (due_at === undefined) return { error: "That due date isn't valid." };
+  if (due_date === undefined) return { error: "That due date isn't valid." };
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -98,7 +100,7 @@ export async function updateTask(slug: string, id: string, _prev: TaskFormState,
     .update({
       title,
       type,
-      due_at,
+      due_date,
       notes: String(formData.get("notes") ?? "").trim() || null,
       assignee_id: uuidOrNull(formData.get("assignee_id")),
       contact_id: uuidOrNull(formData.get("contact_id")),

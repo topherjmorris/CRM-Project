@@ -3,16 +3,16 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { TaskRow } from "@/lib/task-types";
-import { startOfLocalDay, viewerTimeZone } from "@/lib/time-zone";
+import { localDateString, viewerTimeZone } from "@/lib/time-zone";
 
 const SELECT =
-  "id, title, type, due_at, completed_at, assignee_id, contact_id, company_id, deal_id, contacts(first_name, last_name, email), companies(name), deals(name)";
+  "id, title, type, due_date, completed_at, assignee_id, contact_id, company_id, deal_id, contacts(first_name, last_name, email), companies(name), deals(name)";
 
 type Raw = {
   id: string;
   title: string;
   type: TaskRow["type"];
-  due_at: string | null;
+  due_date: string | null;
   completed_at: string | null;
   assignee_id: string | null;
   contact_id: string | null;
@@ -38,10 +38,10 @@ async function decorate(rows: Raw[]): Promise<TaskRow[]> {
   }));
 }
 
-// Boundaries of the viewer's "today" as UTC instants, from the `tz` cookie.
-export async function todayBounds() {
-  const tz = await viewerTimeZone();
-  return { tz, endOfToday: startOfLocalDay(tz, 1).toISOString() };
+// The viewer's local date ("YYYY-MM-DD"), from the `tz` cookie. Tasks due on or
+// before it count as due today / overdue.
+export async function viewerToday() {
+  return localDateString(await viewerTimeZone());
 }
 
 export type TaskView = "today" | "upcoming" | "someday" | "done";
@@ -49,7 +49,7 @@ export type TaskView = "today" | "upcoming" | "someday" | "done";
 // The Tasks page lists. `who` is "me" (assigned to the viewer) or "all".
 export async function listTasks(workspaceId: string, userId: string, view: TaskView, who: "me" | "all") {
   const supabase = await createClient();
-  const { endOfToday } = await todayBounds();
+  const today = await viewerToday();
   let q = supabase.from("tasks").select(SELECT).eq("workspace_id", workspaceId);
   if (who === "me") q = q.eq("assignee_id", userId);
 
@@ -57,9 +57,9 @@ export async function listTasks(workspaceId: string, userId: string, view: TaskV
     q = q.not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(100);
   } else {
     q = q.is("completed_at", null);
-    if (view === "today") q = q.lt("due_at", endOfToday).order("due_at");
-    else if (view === "upcoming") q = q.gte("due_at", endOfToday).order("due_at").limit(200);
-    else q = q.is("due_at", null).order("created_at", { ascending: false }).limit(200);
+    if (view === "today") q = q.lte("due_date", today).order("due_date").order("created_at");
+    else if (view === "upcoming") q = q.gt("due_date", today).order("due_date").limit(200);
+    else q = q.is("due_date", null).order("created_at", { ascending: false }).limit(200);
   }
   const { data, error } = await q;
   if (error) throw new Error(error.message);
@@ -69,14 +69,14 @@ export async function listTasks(workspaceId: string, userId: string, view: TaskV
 // Open tasks due today or overdue for one person: the sidebar badge number.
 export async function countDueToday(workspaceId: string, userId: string) {
   const supabase = await createClient();
-  const { endOfToday } = await todayBounds();
+  const today = await viewerToday();
   const { count } = await supabase
     .from("tasks")
     .select("id", { count: "exact", head: true })
     .eq("workspace_id", workspaceId)
     .eq("assignee_id", userId)
     .is("completed_at", null)
-    .lt("due_at", endOfToday);
+    .lte("due_date", today);
   return count ?? 0;
 }
 
@@ -85,7 +85,7 @@ export async function tasksFor(workspaceId: string, link: { kind: "contact" | "c
   const supabase = await createClient();
   const col = `${link.kind}_id` as const;
   const [open, done] = await Promise.all([
-    supabase.from("tasks").select(SELECT).eq("workspace_id", workspaceId).eq(col, link.id).is("completed_at", null).order("due_at", { nullsFirst: false }),
+    supabase.from("tasks").select(SELECT).eq("workspace_id", workspaceId).eq(col, link.id).is("completed_at", null).order("due_date", { nullsFirst: false }),
     supabase.from("tasks").select(SELECT).eq("workspace_id", workspaceId).eq(col, link.id).not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(10),
   ]);
   return decorate([...((open.data ?? []) as unknown as Raw[]), ...((done.data ?? []) as unknown as Raw[])]);

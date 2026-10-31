@@ -1,10 +1,9 @@
 "use client";
 
-// Full task editor on the task page: title, type, due date/time (local time,
-// sent as an ISO instant), assignee, linked contact and deal, and notes.
+// Full task editor on the task page: title, type, due date, assignee, linked
+// contact, company and deal, and notes.
 
 import { useActionState, useState } from "react";
-import { toLocalInput } from "@/components/local-datetime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +35,7 @@ function Field({ id, label, children }: { id: string; label: string; children: R
 
 export function TaskForm({ action, task, members, contacts, companies, deals }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
-  const [due, setDue] = useState(task.due_at ? toLocalInput(task.due_at) : "");
+  const [due, setDue] = useState(task.due_date ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -54,10 +53,9 @@ export function TaskForm({ action, task, members, contacts, companies, deals }: 
         </Field>
         <Field id="due" label="Due">
           <div className="flex gap-2">
-            <Input id="due" type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} className="w-auto" />
+            <Input id="due" name="due_date" type="date" value={due} onChange={(e) => setDue(e.target.value)} className="w-auto" />
             {due && <Button type="button" variant="ghost" size="sm" onClick={() => setDue("")}>Clear</Button>}
           </div>
-          <input type="hidden" name="due_at" value={due ? new Date(due).toISOString() : ""} />
         </Field>
         <Field id="assignee_id" label="Assigned to">
           <select id="assignee_id" name="assignee_id" defaultValue={task.assignee_id ?? ""} className={selectClass}>

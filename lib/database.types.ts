@@ -481,7 +481,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           deal_id: string | null
-          due_at: string | null
+          due_date: string | null
           id: string
           notes: string | null
           source: string
@@ -499,7 +499,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
-          due_at?: string | null
+          due_date?: string | null
           id?: string
           notes?: string | null
           source?: string
@@ -517,7 +517,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
-          due_at?: string | null
+          due_date?: string | null
           id?: string
           notes?: string | null
           source?: string

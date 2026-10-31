@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { LocalDateTime } from "@/components/local-datetime";
+import { formatDay } from "@/lib/dates";
 import { TaskForm } from "@/components/task-form";
 import { Button } from "@/components/ui/button";
 import { getCompanyOptions, getContactOptions, getMembers } from "@/lib/contacts";
@@ -39,7 +40,7 @@ export default async function TaskPage({ params }: Props) {
           <Link href={`/w/${slug}/tasks`} className="text-sm text-muted-foreground hover:underline">← Tasks</Link>
           <h2 className={`mt-1 text-2xl font-semibold ${done ? "text-muted-foreground line-through" : ""}`}>{t.title}</h2>
           <p className="text-sm text-muted-foreground">
-            {done ? <>Completed <LocalDateTime iso={t.completed_at!} /></> : t.due_at ? <>Due <LocalDateTime iso={t.due_at} /></> : "No due date"}
+            {done ? <>Completed <LocalDateTime iso={t.completed_at!} /></> : t.due_date ? <>Due {formatDay(t.due_date)}</> : "No due date"}
             {t.contact_id && c && (
               <> · <Link href={`/w/${slug}/contacts/${t.contact_id}`} className="hover:underline">{[c.first_name, c.last_name].filter(Boolean).join(" ") || c.email}</Link></>
             )}

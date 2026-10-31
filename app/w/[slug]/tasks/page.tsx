@@ -1,6 +1,6 @@
 // Tasks page. Tabs: Today (due today or overdue), Upcoming, No due date, Done.
 // "Mine" shows tasks assigned to the viewer; "Everyone" shows the whole workspace.
-// "Today" uses the viewer's time zone (tz cookie, see lib/time-zone.ts).
+// "Today" uses the viewer's local date (tz cookie, see lib/time-zone.ts).
 
 import Link from "next/link";
 import { notFound } from "next/navigation";

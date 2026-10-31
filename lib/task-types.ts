@@ -13,7 +13,7 @@ export const TASK_TYPES: { value: TaskType; label: string }[] = [
 ];
 
 // A task plus the names needed to show it in a list.
-export type TaskRow = Pick<Task, "id" | "title" | "type" | "due_at" | "completed_at" | "assignee_id" | "contact_id" | "company_id" | "deal_id"> & {
+export type TaskRow = Pick<Task, "id" | "title" | "type" | "due_date" | "completed_at" | "assignee_id" | "contact_id" | "company_id" | "deal_id"> & {
   assignee_label: string | null;
   contact_label: string | null;
   company_label: string | null;

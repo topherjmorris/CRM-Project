@@ -2,22 +2,22 @@
 
 // Task list used on the Tasks page and on contact/company/deal pages.
 // Ticking the checkbox completes a task immediately (useOptimistic) and saves it in
-// the background; overdue tasks are marked in red based on the viewer's clock.
+// the background; overdue tasks (due before today in the viewer's time zone) show in red.
 
 import Link from "next/link";
 import { useOptimistic, useState, useSyncExternalStore, useTransition } from "react";
 import { Briefcase, CheckSquare, Mail, Phone, type LucideIcon } from "lucide-react";
 import { setTaskDone } from "@/app/w/[slug]/tasks/actions";
-import { LocalDateTime } from "@/components/local-datetime";
+import { browserToday, formatDay } from "@/lib/dates";
 import type { TaskRow, TaskType } from "@/lib/task-types";
 import { cn } from "@/lib/utils";
 
 const TYPE_ICON: Record<TaskType, LucideIcon> = { todo: CheckSquare, call: Phone, linkedin: Briefcase, email: Mail };
 
 const noopSubscribe = () => () => {};
-// useSyncExternalStore needs a stable snapshot, so read the clock once per page load.
-let pageLoadedAt = 0;
-const clientNow = () => (pageLoadedAt ||= Date.now());
+// useSyncExternalStore needs a stable snapshot, so read the date once per page load.
+let loadedOn = "";
+const clientToday = () => (loadedOn ||= browserToday());
 
 type Props = {
   slug: string;
@@ -34,8 +34,8 @@ export function TaskList({ slug, tasks, hide, empty, showAssignee }: Props) {
   );
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  // Read "now" only in the browser so server and client render the same first frame.
-  const now = useSyncExternalStore(noopSubscribe, clientNow, () => 0);
+  // Read today's date only in the browser so server and client render the same first frame.
+  const today = useSyncExternalStore(noopSubscribe, clientToday, () => "");
 
   if (!items.length) return <p className="text-sm text-muted-foreground">{empty}</p>;
 
@@ -46,7 +46,8 @@ export function TaskList({ slug, tasks, hide, empty, showAssignee }: Props) {
         {items.map((t) => {
           const Icon = TYPE_ICON[t.type];
           const done = !!t.completed_at;
-          const overdue = !done && !!t.due_at && now > 0 && new Date(t.due_at).getTime() < now;
+          const overdue = !done && !!t.due_date && !!today && t.due_date < today;
+          const dueToday = !done && !!today && t.due_date === today;
           return (
             <li key={t.id} className="flex items-start gap-3 px-3 py-2.5">
               <input
@@ -75,10 +76,9 @@ export function TaskList({ slug, tasks, hide, empty, showAssignee }: Props) {
                   </Link>
                 </div>
                 <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                  {t.due_at ? (
-                    <span className={cn(overdue && "font-medium text-destructive")}>
-                      {overdue ? "Overdue · " : "Due "}
-                      <LocalDateTime iso={t.due_at} />
+                  {t.due_date ? (
+                    <span className={cn(overdue && "font-medium text-destructive", dueToday && "font-medium text-foreground")}>
+                      {dueToday ? "Due today" : `${overdue ? "Overdue · " : "Due "}${formatDay(t.due_date)}`}
                     </span>
                   ) : (
                     <span>No due date</span>
