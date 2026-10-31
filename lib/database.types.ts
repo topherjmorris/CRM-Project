@@ -147,6 +147,7 @@ export type Database = {
           postal_code: string | null
           region: string | null
           size: string | null
+          tag_ids: string[]
           updated_at: string
           workspace_id: string
           x_url: string | null
@@ -174,6 +175,7 @@ export type Database = {
           postal_code?: string | null
           region?: string | null
           size?: string | null
+          tag_ids?: string[]
           updated_at?: string
           workspace_id: string
           x_url?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           postal_code?: string | null
           region?: string | null
           size?: string | null
+          tag_ids?: string[]
           updated_at?: string
           workspace_id?: string
           x_url?: string | null
@@ -244,6 +247,7 @@ export type Database = {
           secondary_email: string | null
           source: string
           source_detail: string | null
+          tag_ids: string[]
           updated_at: string
           website: string | null
           workspace_id: string
@@ -277,6 +281,7 @@ export type Database = {
           secondary_email?: string | null
           source?: string
           source_detail?: string | null
+          tag_ids?: string[]
           updated_at?: string
           website?: string | null
           workspace_id: string
@@ -310,6 +315,7 @@ export type Database = {
           secondary_email?: string | null
           source?: string
           source_detail?: string | null
+          tag_ids?: string[]
           updated_at?: string
           website?: string | null
           workspace_id?: string
@@ -435,6 +441,7 @@ export type Database = {
           pipeline_id: string
           position: number
           stage_id: string
+          tag_ids: string[]
           updated_at: string
           value: number
           workspace_id: string
@@ -454,6 +461,7 @@ export type Database = {
           pipeline_id: string
           position?: number
           stage_id: string
+          tag_ids?: string[]
           updated_at?: string
           value?: number
           workspace_id: string
@@ -473,6 +481,7 @@ export type Database = {
           pipeline_id?: string
           position?: number
           stage_id?: string
+          tag_ids?: string[]
           updated_at?: string
           value?: number
           workspace_id?: string
@@ -603,6 +612,7 @@ export type Database = {
           source_detail: string | null
           stage_id: string
           stage_kind: Database["public"]["Enums"]["lead_stage_kind"]
+          tag_ids: string[]
           updated_at: string
           website: string | null
           workspace_id: string
@@ -638,6 +648,7 @@ export type Database = {
           source_detail?: string | null
           stage_id: string
           stage_kind?: Database["public"]["Enums"]["lead_stage_kind"]
+          tag_ids?: string[]
           updated_at?: string
           website?: string | null
           workspace_id: string
@@ -673,6 +684,7 @@ export type Database = {
           source_detail?: string | null
           stage_id?: string
           stage_kind?: Database["public"]["Enums"]["lead_stage_kind"]
+          tag_ids?: string[]
           updated_at?: string
           website?: string | null
           workspace_id?: string
@@ -802,6 +814,38 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          workspace_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          workspace_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {

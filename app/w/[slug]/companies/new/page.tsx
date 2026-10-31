@@ -6,6 +6,7 @@ import { CompanyForm } from "@/components/company-form";
 import { getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
+import { getTags } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { createCompany } from "../actions";
 
@@ -13,7 +14,7 @@ export default async function NewCompanyPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
-  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "company"), getHiddenFields(ws.id, "company")]);
+  const [customDefs, hiddenFields, allTags] = await Promise.all([getCustomFields(ws.id, "company"), getHiddenFields(ws.id, "company"), getTags(ws.id)]);
   const supabase = await createClient();
   const [{ data: auth }, members] = await Promise.all([supabase.auth.getUser(), getMembers(ws.id)]);
 
@@ -25,6 +26,8 @@ export default async function NewCompanyPage({ params }: { params: Promise<{ slu
       </div>
       <CompanyForm
         hidden={hiddenFields}
+        allTags={allTags}
+        tagNames={[]}
         customDefs={customDefs}
         customValues={{}}
         action={createCompany.bind(null, slug)}

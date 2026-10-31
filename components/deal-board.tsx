@@ -9,10 +9,12 @@ import Link from "next/link";
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { CalendarDays } from "lucide-react";
 import { moveDeal } from "@/app/w/[slug]/deals/actions";
+import { TagChips } from "@/components/tag-chips";
 import { formatMoney, type BoardDeal, type Stage } from "@/lib/deals";
+import { tagsFor, type TagLite } from "@/lib/tags";
 import { cn } from "@/lib/utils";
 
-type Props = { slug: string; stages: Stage[]; deals: BoardDeal[] };
+type Props = { slug: string; stages: Stage[]; deals: BoardDeal[]; tags?: TagLite[] };
 
 const KIND_STYLE: Record<string, string> = {
   won: "border-t-emerald-500",
@@ -20,7 +22,7 @@ const KIND_STYLE: Record<string, string> = {
   open: "border-t-transparent",
 };
 
-export function DealBoard({ slug, stages, deals }: Props) {
+export function DealBoard({ slug, stages, deals, tags = [] }: Props) {
   const [optimistic, applyMove] = useOptimistic(deals, (state, m: { id: string; stage_id: string; position: number }) =>
     state.map((d) => (d.id === m.id ? { ...d, stage_id: m.stage_id, position: m.position } : d)),
   );
@@ -126,6 +128,7 @@ export function DealBoard({ slug, stages, deals }: Props) {
                         {d.name}
                       </Link>
                       {d.company_name && <p className="truncate text-xs text-muted-foreground">{d.company_name}</p>}
+                      <TagChips tags={tagsFor(d.tag_ids, tags)} className="mt-1" />
                       <div className="mt-1.5 flex items-center justify-between gap-2 text-xs">
                         <span className="font-medium tabular-nums">{formatMoney(Number(d.value), d.currency)}</span>
                         {d.close_date && (

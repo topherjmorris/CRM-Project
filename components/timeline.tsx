@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { ArrowRight, ArrowRightLeft, Building2, UserRoundSearch, CheckCircle2, ListTodo, RotateCcw, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
+import { ArrowRight, ArrowRightLeft, Building2, Tag, UserRoundSearch, CheckCircle2, ListTodo, RotateCcw, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
 import { addNote, deleteNote, updateNote, type NoteState } from "@/app/w/[slug]/activities/actions";
 import { LocalDateTime, toLocalInput } from "@/components/local-datetime";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const ICONS: Record<string, LucideIcon> = {
   task_completed: CheckCircle2,
   task_reopened: RotateCcw,
   contact_updated: Pencil,
+  tags_changed: Tag,
   company_updated: Pencil,
 };
 
@@ -172,6 +173,11 @@ function Describe({ item, slug, subject }: { item: TimelineItem; slug: string; s
           {dealLink && <> · {dealLink}</>}
         </>
       );
+    }
+    case "tags_changed": {
+      const list = (k: string) => ((item.meta as Record<string, unknown>)?.[k] as string[] | undefined) ?? [];
+      const parts = [...list("added").map((t) => `+${t}`), ...list("removed").map((t) => `−${t}`)];
+      return <>Tags {parts.join(", ")}</>;
     }
     case "contact_updated":
       return <>{contactLink ?? "Contact"} updated</>;

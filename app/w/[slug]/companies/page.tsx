@@ -8,18 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { COMPANY_TYPES, typeLabel } from "@/lib/companies";
 import { createClient } from "@/lib/supabase/server";
+import { TagChips } from "@/components/tag-chips";
+import { TagFilter } from "@/components/tag-filter";
+import { tagsFor } from "@/lib/tags";
+import { getTags } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 const PAGE_SIZE = 50;
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; type?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; type?: string; tag?: string }> };
 
 export default async function CompaniesPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { q = "", page = "1", type = "" } = await searchParams;
+  const { q = "", page = "1", type = "", tag = "" } = await searchParams;
   const typeFilter = COMPANY_TYPES.some((t) => t.value === type) ? type : "";
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
+  const allTags = await getTags(ws.id);
+  const tagFilter = allTags.some((t) => t.id === tag) ? tag : "";
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const from = (pageNum - 1) * PAGE_SIZE;
@@ -27,11 +33,12 @@ export default async function CompaniesPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   let query = supabase
     .from("companies")
-    .select("id, name, domain, industry, size, company_type, contacts(count)", { count: "exact" })
+    .select("id, tag_ids, name, domain, industry, size, company_type, contacts(count)", { count: "exact" })
     .eq("workspace_id", ws.id)
     .order("name")
     .range(from, from + PAGE_SIZE - 1);
 
+  if (tagFilter) query = query.contains("tag_ids", [tagFilter]);
   // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   if (typeFilter) query = query.eq("company_type", typeFilter);
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
@@ -44,18 +51,21 @@ export default async function CompaniesPage({ params, searchParams }: Props) {
   if (error) throw new Error(error.message);
   const total = count ?? 0;
   const base = `/w/${slug}/companies`;
-  const pageHref = (n: number) => `${base}?${new URLSearchParams({ ...(q ? { q } : {}), ...(typeFilter ? { type: typeFilter } : {}), page: String(n) })}`;
+  const pageHref = (n: number) => `${base}?${new URLSearchParams({ ...(q ? { q } : {}), ...(tagFilter ? { tag: tagFilter } : {}), ...(typeFilter ? { type: typeFilter } : {}), page: String(n) })}`;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <form className="relative min-w-0 flex-1 sm:max-w-sm" role="search">
+          {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
+          {typeFilter && <input type="hidden" name="type" value={typeFilter} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="q" defaultValue={q} placeholder="Search name, website, industry" className="pl-8" aria-label="Search companies" />
         </form>
         {/* Type filter: a plain GET form, so it works without JavaScript and keeps the search. */}
         <form className="flex items-center gap-2">
           {q && <input type="hidden" name="q" value={q} />}
+          {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
           <select name="type" defaultValue={typeFilter} aria-label="Filter by type" className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
             <option value="">All types</option>
             {COMPANY_TYPES.map((t) => (
@@ -64,6 +74,7 @@ export default async function CompaniesPage({ params, searchParams }: Props) {
           </select>
           <button type="submit" className="text-sm text-muted-foreground hover:text-foreground">Filter</button>
         </form>
+        <TagFilter tags={allTags} value={tagFilter} keep={{ q, type: typeFilter }} />
         <span className="text-sm text-muted-foreground tabular-nums">
           {total} {total === 1 ? "company" : "companies"}
         </span>
@@ -105,6 +116,7 @@ export default async function CompaniesPage({ params, searchParams }: Props) {
                 <TableRow key={c.id} className="relative">
                   <TableCell className="font-medium">
                     <Link href={`${base}/${c.id}`} className="after:absolute after:inset-0 hover:underline">{c.name}</Link>
+                    <TagChips tags={tagsFor(c.tag_ids, allTags)} className="ml-2 align-middle" />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{c.domain}</TableCell>
                   <TableCell>{typeLabel(c.company_type)}</TableCell>

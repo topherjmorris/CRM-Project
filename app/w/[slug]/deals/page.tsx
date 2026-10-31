@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatMoney } from "@/lib/deals";
 import { getPipelines } from "@/lib/pipelines";
 import { createClient } from "@/lib/supabase/server";
+import { getTags } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ pipeline?: string }> };
@@ -29,7 +30,7 @@ export default async function DealsPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
-    .select("id, name, value, currency, close_date, stage_id, position, owner_id, companies(name)")
+    .select("id, name, value, currency, close_date, stage_id, position, owner_id, tag_ids, companies(name)")
     .eq("pipeline_id", pipeline.id)
     .limit(2000);
   if (error) throw new Error(error.message);
@@ -68,7 +69,7 @@ export default async function DealsPage({ params, searchParams }: Props) {
           </Link>
         </div>
       </div>
-      <DealBoard slug={slug} stages={pipeline.stages} deals={deals} />
+      <DealBoard slug={slug} stages={pipeline.stages} deals={deals} tags={await getTags(ws.id)} />
     </div>
   );
 }

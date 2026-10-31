@@ -17,6 +17,9 @@ import { detailInput, leadName, sourceLabel, type LeadInput } from "@/lib/leads"
 import { createClient } from "@/lib/supabase/server";
 import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { customToInputs } from "@/lib/custom-fields";
+import { TagChips } from "@/components/tag-chips";
+import { getTags } from "@/lib/tags-server";
+import { tagsFor } from "@/lib/tags";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { deleteLead, updateLead } from "../actions";
 
@@ -26,7 +29,7 @@ export default async function LeadPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "lead"), getHiddenFields(ws.id, "lead")]);
+  const [customDefs, hiddenFields, allTags] = await Promise.all([getCustomFields(ws.id, "lead"), getHiddenFields(ws.id, "lead"), getTags(ws.id)]);
 
   const supabase = await createClient();
   const [{ data: l }, members, stages] = await Promise.all([
@@ -61,6 +64,7 @@ export default async function LeadPage({ params }: Props) {
         <div className="min-w-0 flex-1">
           <Link href={`/w/${slug}/leads`} className="text-sm text-muted-foreground hover:underline">← Leads</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{name}</h2>
+          <TagChips tags={tagsFor(l.tag_ids, allTags)} className="mt-1" />
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge variant={converted ? "default" : l.stage_kind === "unqualified" ? "outline" : "secondary"}>{stage?.name ?? "No stage"}</Badge>
             {l.company_name && <span>{l.company_name}</span>}
@@ -94,6 +98,8 @@ export default async function LeadPage({ params }: Props) {
         <section className="flex flex-col gap-3">
           <h3 className="font-medium">Details</h3>
           <LeadForm hidden={hiddenFields}
+        allTags={allTags}
+        tagNames={tagsFor(l.tag_ids, allTags).map((t) => t.name)}
         customDefs={customDefs} customValues={customToInputs(customDefs, l.custom)} key={l.updated_at} action={updateLead.bind(null, slug, l.id)} initial={initial} members={members} stages={stages.filter((s) => s.kind !== "converted")} submitLabel="Save changes" savedMessage="Saved" />
         </section>
       )}

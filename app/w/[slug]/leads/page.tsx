@@ -12,17 +12,23 @@ import { getMembers } from "@/lib/contacts";
 import { getLeadStages } from "@/lib/lead-stages";
 import { leadName } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
+import { TagChips } from "@/components/tag-chips";
+import { TagFilter } from "@/components/tag-filter";
+import { tagsFor } from "@/lib/tags";
+import { getTags } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 const PAGE_SIZE = 50;
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; tab?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; tab?: string; tag?: string }> };
 
 export default async function LeadsPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { q = "", page = "1", tab: tabParam } = await searchParams;
+  const { q = "", page = "1", tab: tabParam, tag = "" } = await searchParams;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
+  const allTags = await getTags(ws.id);
+  const tagFilter = allTags.some((t) => t.id === tag) ? tag : "";
   const stages = await getLeadStages(ws.id);
   const stageById = new Map(stages.map((st) => [st.id, st]));
   // "open" = every open stage; a stage id = that stage; "all" = everything.
@@ -38,12 +44,13 @@ export default async function LeadsPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   let query = supabase
     .from("leads")
-    .select("id, first_name, last_name, email, phone, company_name, stage_id, stage_kind, source, owner_id, created_at", { count: "exact" })
+    .select("id, tag_ids, first_name, last_name, email, phone, company_name, stage_id, stage_kind, source, owner_id, created_at", { count: "exact" })
     .eq("workspace_id", ws.id)
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
   if (tab.id === "open") query = query.eq("stage_kind", "open");
   else if (tab.id !== "all") query = query.eq("stage_id", tab.id);
+  if (tagFilter) query = query.contains("tag_ids", [tagFilter]);
   // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
   if (term) {
@@ -55,16 +62,18 @@ export default async function LeadsPage({ params, searchParams }: Props) {
   const ownerLabel = new Map(members.map((m) => [m.id, m.label]));
   const total = count ?? 0;
   const base = `/w/${slug}/leads`;
-  const href = (p: Record<string, string>) => `${base}?${new URLSearchParams({ tab: tab.id, ...(q ? { q } : {}), ...p })}`;
+  const href = (p: Record<string, string>) => `${base}?${new URLSearchParams({ tab: tab.id, ...(q ? { q } : {}), ...(tagFilter ? { tag: tagFilter } : {}), ...p })}`;
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-3">
         <form className="relative min-w-0 flex-1 sm:max-w-sm" role="search">
+          {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
           <input type="hidden" name="tab" value={tab.id} />
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="q" defaultValue={q} placeholder="Search name, email, company, phone" className="pl-8" aria-label="Search leads" />
         </form>
+        <TagFilter tags={allTags} value={tagFilter} keep={{ q, tab: tab.id }} />
         <span className="text-sm text-muted-foreground tabular-nums">{total} {total === 1 ? "lead" : "leads"}</span>
         <div className="ml-auto flex gap-2">
           <Link href={`${base}/stages`} className={buttonVariants({ variant: "outline" })}>
@@ -116,6 +125,7 @@ export default async function LeadsPage({ params, searchParams }: Props) {
                 <TableRow key={l.id} className="relative">
                   <TableCell className="font-medium">
                     <Link href={`${base}/${l.id}`} className="after:absolute after:inset-0 hover:underline">{leadName(l)}</Link>
+                    <TagChips tags={tagsFor(l.tag_ids, allTags)} className="ml-2 align-middle" />
                   </TableCell>
                   <TableCell>{l.company_name}</TableCell>
                   <TableCell className="hidden text-muted-foreground md:table-cell">{l.email ?? l.phone}</TableCell>

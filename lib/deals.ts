@@ -8,7 +8,7 @@ export type Stage = Database["public"]["Tables"]["pipeline_stages"]["Row"];
 export type Deal = Database["public"]["Tables"]["deals"]["Row"];
 export type StageKind = Database["public"]["Enums"]["stage_kind"];
 
-export type BoardDeal = Pick<Deal, "id" | "name" | "value" | "currency" | "close_date" | "stage_id" | "position" | "owner_id"> & {
+export type BoardDeal = Pick<Deal, "id" | "name" | "value" | "currency" | "close_date" | "stage_id" | "position" | "owner_id" | "tag_ids"> & {
   company_name: string | null;
 };
 

@@ -10,6 +10,9 @@ import { detailInput } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { customToInputs } from "@/lib/custom-fields";
+import { TagChips } from "@/components/tag-chips";
+import { getTags } from "@/lib/tags-server";
+import { tagsFor } from "@/lib/tags";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
 import { tasksFor } from "@/lib/tasks";
@@ -24,7 +27,7 @@ export default async function ContactPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "contact"), getHiddenFields(ws.id, "contact")]);
+  const [customDefs, hiddenFields, allTags] = await Promise.all([getCustomFields(ws.id, "contact"), getHiddenFields(ws.id, "contact"), getTags(ws.id)]);
 
   const supabase = await createClient();
   const [{ data: c }, members, companies] = await Promise.all([
@@ -59,6 +62,7 @@ export default async function ContactPage({ params }: Props) {
         <div className="min-w-0 flex-1">
           <Link href={`/w/${slug}/contacts`} className="text-sm text-muted-foreground hover:underline">← Contacts</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{name}</h2>
+          <TagChips tags={tagsFor(c.tag_ids, allTags)} className="mt-1" />
           <p className="text-sm text-muted-foreground">
             {c.job_title && <>{c.job_title} at </>}
             {c.company_id ? (
@@ -78,6 +82,8 @@ export default async function ContactPage({ params }: Props) {
       </div>
       <ContactForm
         hidden={hiddenFields}
+        allTags={allTags}
+        tagNames={tagsFor(c.tag_ids, allTags).map((t) => t.name)}
         customDefs={customDefs}
         customValues={customToInputs(customDefs, c.custom)}
         key={c.updated_at}

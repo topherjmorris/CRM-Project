@@ -5,6 +5,8 @@
 
 import { useActionState } from "react";
 import { CustomFieldsSection } from "@/components/custom-fields-section";
+import { TagInput } from "@/components/tag-input";
+import type { TagLite } from "@/lib/tags";
 import type { CustomFieldDef } from "@/lib/custom-fields";
 import { isHidden } from "@/lib/builtin-fields";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,9 @@ type Props = {
   // Stages a person can pick: open and unqualified (Converted is set by Convert).
   stages: LeadStage[];
   // Workspace custom fields for this record type, and their current values as strings.
+  // Workspace tags (for suggestions) and this record's tag names.
+  allTags?: TagLite[];
+  tagNames?: string[];
   customDefs?: CustomFieldDef[];
   customValues?: Record<string, string>;
   // Built-in fields this workspace has switched off (Settings → Custom fields).
@@ -45,7 +50,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage, customDefs = [], customValues = {}, hidden = [] }: Props) {
+export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage, customDefs = [], customValues = {}, hidden = [], allTags = [], tagNames = [] }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -108,6 +113,7 @@ export function LeadForm({ action, initial, members, stages, submitLabel, savedM
       </div>
       <p className="-mt-2 text-xs text-muted-foreground">An email or a phone number is required.</p>
       <DetailFields hidden={hidden} values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
+      <TagInput all={allTags} initial={tagNames} />
       <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={3} maxLength={10000} />

@@ -12,6 +12,9 @@ import { contactName, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { customToInputs } from "@/lib/custom-fields";
+import { TagChips } from "@/components/tag-chips";
+import { getTags } from "@/lib/tags-server";
+import { tagsFor } from "@/lib/tags";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
 import { tasksFor } from "@/lib/tasks";
@@ -26,7 +29,7 @@ export default async function CompanyPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "company"), getHiddenFields(ws.id, "company")]);
+  const [customDefs, hiddenFields, allTags] = await Promise.all([getCustomFields(ws.id, "company"), getHiddenFields(ws.id, "company"), getTags(ws.id)]);
 
   const supabase = await createClient();
   const [{ data: c }, { data: people }, members] = await Promise.all([
@@ -66,6 +69,7 @@ export default async function CompanyPage({ params }: Props) {
         <div className="min-w-0 flex-1">
           <Link href={`/w/${slug}/companies`} className="text-sm text-muted-foreground hover:underline">← Companies</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{c.name}</h2>
+          <TagChips tags={tagsFor(c.tag_ids, allTags)} className="mt-1" />
           <p className="text-sm text-muted-foreground">
             {c.domain ? (
               <a href={`https://${c.domain}`} target="_blank" rel="noreferrer" className="hover:underline">{c.domain}</a>
@@ -118,6 +122,8 @@ export default async function CompanyPage({ params }: Props) {
         <h3 className="font-medium">Details</h3>
         <CompanyForm
         hidden={hiddenFields}
+        allTags={allTags}
+        tagNames={tagsFor(c.tag_ids, allTags).map((t) => t.name)}
         customDefs={customDefs}
         customValues={customToInputs(customDefs, c.custom)}
           key={c.updated_at}

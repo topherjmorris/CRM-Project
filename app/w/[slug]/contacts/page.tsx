@@ -9,17 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { contactName, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
+import { TagChips } from "@/components/tag-chips";
+import { TagFilter } from "@/components/tag-filter";
+import { tagsFor } from "@/lib/tags";
+import { getTags } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 const PAGE_SIZE = 50;
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; tag?: string }> };
 
 export default async function ContactsPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { q = "", page = "1" } = await searchParams;
+  const { q = "", page = "1", tag = "" } = await searchParams;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
+  const allTags = await getTags(ws.id);
+  const tagFilter = allTags.some((t) => t.id === tag) ? tag : "";
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const from = (pageNum - 1) * PAGE_SIZE;
@@ -27,11 +33,12 @@ export default async function ContactsPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   let query = supabase
     .from("contacts")
-    .select("id, first_name, last_name, email, phone, company_name, job_title, owner_id, created_at", { count: "exact" })
+    .select("id, tag_ids, first_name, last_name, email, phone, company_name, job_title, owner_id, created_at", { count: "exact" })
     .eq("workspace_id", ws.id)
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
+  if (tagFilter) query = query.contains("tag_ids", [tagFilter]);
   // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
   if (term) {
@@ -46,15 +53,17 @@ export default async function ContactsPage({ params, searchParams }: Props) {
   const ownerLabel = new Map(members.map((m) => [m.id, m.label]));
   const total = count ?? 0;
   const base = `/w/${slug}/contacts`;
-  const pageHref = (n: number) => `${base}?${new URLSearchParams({ ...(q ? { q } : {}), page: String(n) })}`;
+  const pageHref = (n: number) => `${base}?${new URLSearchParams({ ...(q ? { q } : {}), ...(tagFilter ? { tag: tagFilter } : {}), page: String(n) })}`;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <form className="relative min-w-0 flex-1 sm:max-w-sm" role="search">
+          {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="q" defaultValue={q} placeholder="Search name, email, company, phone" className="pl-8" aria-label="Search contacts" />
         </form>
+        <TagFilter tags={allTags} value={tagFilter} keep={{ q }} />
         <span className="text-sm text-muted-foreground tabular-nums">
           {total} {total === 1 ? "contact" : "contacts"}
         </span>
@@ -97,6 +106,7 @@ export default async function ContactsPage({ params, searchParams }: Props) {
                     <Link href={`${base}/${c.id}`} className="after:absolute after:inset-0 hover:underline">
                       {contactName(c)}
                     </Link>
+                    <TagChips tags={tagsFor(c.tag_ids, allTags)} className="ml-2 align-middle" />
                     {c.job_title && <div className="text-xs font-normal text-muted-foreground">{c.job_title}</div>}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{c.email}</TableCell>

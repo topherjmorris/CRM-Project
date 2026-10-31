@@ -4,6 +4,8 @@
 
 import { useActionState } from "react";
 import { CustomFieldsSection } from "@/components/custom-fields-section";
+import { TagInput } from "@/components/tag-input";
+import type { TagLite } from "@/lib/tags";
 import type { CustomFieldDef } from "@/lib/custom-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,9 @@ type Props = {
   companies: string[];
   contacts?: { id: string; label: string }[];
   // Workspace custom fields for this record type, and their current values as strings.
+  // Workspace tags (for suggestions) and this record's tag names.
+  allTags?: TagLite[];
+  tagNames?: string[];
   customDefs?: CustomFieldDef[];
   customValues?: Record<string, string>;
   submitLabel: string;
@@ -41,7 +46,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function DealForm({ action, initial, pipelines, members, companies, contacts, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
+export function DealForm({ action, initial, pipelines, members, companies, contacts, submitLabel, savedMessage, customDefs = [], customValues = {}, allTags = [], tagNames = [] }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -99,6 +104,7 @@ export function DealForm({ action, initial, pipelines, members, companies, conta
           </Field>
         )}
       </div>
+      <TagInput all={allTags} initial={tagNames} />
       <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={3} maxLength={10000} />

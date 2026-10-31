@@ -11,6 +11,7 @@ import { CONTACT_FIELDS, type ContactInput } from "@/lib/contacts";
 import { detailError, detailRow, readDetail } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { readCustomFor } from "@/lib/custom-fields-server";
+import { tagIdsFromForm } from "@/lib/tags-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 // `custom` holds what was typed in custom fields, to show again after an error.
@@ -87,12 +88,13 @@ export async function createContact(slug: string, _prev: FormState, formData: Fo
   if (!ws) return { error: "Workspace not found.", values };
   const cf = await readCustomFor(ws.id, "contact", formData);
   if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
+  const tag_ids = await tagIdsFromForm(ws.id, formData);
 
   const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contacts")
-    .insert({ ...toRow(values), company_id, custom: cf.values, workspace_id: ws.id })
+    .insert({ ...toRow(values), company_id, custom: cf.values, tag_ids, workspace_id: ws.id })
     .select("id")
     .single();
   if (error) return { error: friendly(error), values, custom: cf.raw };
@@ -109,9 +111,10 @@ export async function updateContact(slug: string, id: string, _prev: FormState, 
   if (!ws) return { error: "Workspace not found.", values };
   const cf = await readCustomFor(ws.id, "contact", formData, id);
   if ("error" in cf) return { error: cf.error, values, custom: cf.raw };
+  const tag_ids = await tagIdsFromForm(ws.id, formData);
   const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
-  const { error } = await supabase.from("contacts").update({ ...toRow(values), company_id, custom: cf.values }).eq("id", id);
+  const { error } = await supabase.from("contacts").update({ ...toRow(values), company_id, custom: cf.values, tag_ids }).eq("id", id);
   if (error) return { error: friendly(error), values, custom: cf.raw };
 
   revalidatePath(`/w/${slug}/contacts`);

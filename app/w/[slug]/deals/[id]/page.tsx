@@ -14,6 +14,9 @@ import { getPipelines } from "@/lib/pipelines";
 import { createClient } from "@/lib/supabase/server";
 import { getCustomFields } from "@/lib/custom-fields-server";
 import { customToInputs } from "@/lib/custom-fields";
+import { TagChips } from "@/components/tag-chips";
+import { getTags } from "@/lib/tags-server";
+import { tagsFor } from "@/lib/tags";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
 import { tasksFor } from "@/lib/tasks";
@@ -28,7 +31,7 @@ export default async function DealPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const customDefs = await getCustomFields(ws.id, "deal");
+  const [customDefs, allTags] = await Promise.all([getCustomFields(ws.id, "deal"), getTags(ws.id)]);
 
   const supabase = await createClient();
   const [{ data: d }, { data: links }, pipelines, members, companies, contactOptions] = await Promise.all([
@@ -57,6 +60,7 @@ export default async function DealPage({ params }: Props) {
         <div className="min-w-0 flex-1">
           <Link href={`${base}?pipeline=${d.pipeline_id}`} className="text-sm text-muted-foreground hover:underline">← Deals</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{d.name}</h2>
+          <TagChips tags={tagsFor(d.tag_ids, allTags)} className="mt-1" />
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground tabular-nums">{formatMoney(Number(d.value), d.currency)}</span>
             {stage && (
@@ -108,6 +112,8 @@ export default async function DealPage({ params }: Props) {
       <section className="flex flex-col gap-3">
         <h3 className="font-medium">Details</h3>
         <DealForm
+        allTags={allTags}
+        tagNames={tagsFor(d.tag_ids, allTags).map((t) => t.name)}
         customDefs={customDefs}
         customValues={customToInputs(customDefs, d.custom)}
           key={d.updated_at}
