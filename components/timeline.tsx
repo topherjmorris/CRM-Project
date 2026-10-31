@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TimelineItem, TimelineSubject } from "@/lib/activities";
+import { changesOf } from "@/lib/activity-changes";
 import { formatMoney } from "@/lib/deals";
 
 type Props = { slug: string; subject: TimelineSubject; items: TimelineItem[]; currentUserId: string };
@@ -24,7 +25,50 @@ const ICONS: Record<string, LucideIcon> = {
   deal_won: Trophy,
   deal_lost: XCircle,
   deal_contact_added: Users,
+  contact_updated: Pencil,
+  company_updated: Pencil,
 };
+
+const FIELD_LABELS: Record<string, string> = {
+  first_name: "First name",
+  last_name: "Last name",
+  email: "Email",
+  phone: "Phone",
+  job_title: "Job title",
+  linkedin_url: "LinkedIn",
+  notes: "Notes",
+  owner_id: "Owner",
+  source: "Source",
+  name: "Name",
+  domain: "Website",
+  industry: "Industry",
+  size: "Employees",
+};
+
+function show(v: unknown) {
+  return v === null || v === undefined || v === "" ? "empty" : String(v);
+}
+
+function Changes({ item }: { item: TimelineItem }) {
+  const changes = changesOf(item.meta);
+  if (!changes.length) return null;
+  return (
+    <ul className="mt-1.5 flex flex-col gap-0.5 rounded-md bg-muted/60 px-3 py-2 text-sm">
+      {changes.map((c) => (
+        <li key={c.field} className="break-words">
+          <span className="text-muted-foreground">{FIELD_LABELS[c.field] ?? c.field.replaceAll("_", " ")}:</span>{" "}
+          {"to" in c ? (
+            <>
+              <span className="line-through decoration-muted-foreground/60">{show(c.from)}</span> → {show(c.to)}
+            </>
+          ) : (
+            "changed"
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function str(meta: unknown, key: string) {
   const v = (meta as Record<string, unknown> | null)?.[key];
@@ -60,6 +104,10 @@ function Describe({ item, slug, subject }: { item: TimelineItem; slug: string; s
       return <>{dealLink ?? "Deal"} won · {formatMoney(Number(str(m, "value") || 0))}</>;
     case "deal_lost":
       return <>{dealLink ?? "Deal"} marked lost</>;
+    case "contact_updated":
+      return <>{contactLink ?? "Contact"} updated</>;
+    case "company_updated":
+      return <>Company details updated</>;
     case "deal_contact_added":
       return <>{contactLink ?? "Contact"} added to {dealLink ?? "this deal"}</>;
     default:
@@ -134,6 +182,7 @@ function Entry({ item, slug, subject, mine }: { item: TimelineItem; slug: string
           {item.actor_label && <span className="text-muted-foreground">by {item.actor_label}</span>}
         </div>
         <LocalDateTime iso={item.occurred_at} className="text-xs text-muted-foreground tabular-nums" />
+        {!isNote && <Changes item={item} />}
         {isNote && !editing && <p className="mt-1.5 rounded-md bg-muted/60 px-3 py-2 text-sm whitespace-pre-wrap">{item.body}</p>}
         {isNote && editing && <NoteEditor slug={slug} item={item} onDone={() => setEditing(false)} />}
         {isNote && mine && !editing && (

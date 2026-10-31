@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
+import { changesOf } from "@/lib/activity-changes";
 
 export type Activity = Database["public"]["Tables"]["activities"]["Row"];
 export type TimelineItem = Activity & {
@@ -40,16 +41,32 @@ export async function getTimeline(workspaceId: string, subject: TimelineSubject)
     .limit(LIMIT);
   if (error) throw new Error(error.message);
 
-  const actorIds = [...new Set((data ?? []).map((a) => a.actor_id).filter((x): x is string => !!x))];
+  // People referenced by actor_id, plus owners named in "updated" events.
+  const ownerIds = (data ?? []).flatMap((a) =>
+    changesOf(a.meta).filter((c) => c.field === "owner_id").flatMap((c) => [c.from, c.to]),
+  );
+  const actorIds = [
+    ...new Set([...(data ?? []).map((a) => a.actor_id), ...ownerIds].filter((x): x is string => typeof x === "string" && !!x)),
+  ];
   const { data: profiles } = actorIds.length
     ? await supabase.from("profiles").select("id, full_name, email").in("id", actorIds)
     : { data: [] };
   const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || p.email]));
 
+  const ownerLabel = (v: unknown) => (typeof v === "string" ? (names.get(v) ?? "someone") : null);
   return (data ?? []).map(({ contacts, deals, ...a }) => ({
     ...a,
+    meta: changesOf(a.meta).some((c) => c.field === "owner_id")
+      ? ({
+          ...(a.meta as object),
+          changes: changesOf(a.meta).map((c) =>
+            c.field === "owner_id" ? { ...c, from: ownerLabel(c.from), to: ownerLabel(c.to) } : c,
+          ),
+        } as Activity["meta"])
+      : a.meta,
     actor_label: a.actor_id ? (names.get(a.actor_id) ?? null) : null,
     contact_label: contacts ? [contacts.first_name, contacts.last_name].filter(Boolean).join(" ") || contacts.email : null,
     deal_label: deals?.name ?? null,
   }));
 }
+
