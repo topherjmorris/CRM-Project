@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { contactName, getCompanyNames, getMembers, type ContactInput } from "@/lib/contacts";
+import { detailInput } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
@@ -46,6 +47,7 @@ export default async function ContactPage({ params }: Props) {
     linkedin_url: c.linkedin_url ?? "",
     notes: c.notes ?? "",
     owner_id: c.owner_id ?? "",
+    ...detailInput(c),
   };
 
   return (

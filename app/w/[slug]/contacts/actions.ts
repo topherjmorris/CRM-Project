@@ -8,6 +8,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CONTACT_FIELDS, type ContactInput } from "@/lib/contacts";
+import { detailError, detailRow, readDetail } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
@@ -16,7 +17,7 @@ export type FormState = { error?: string; values?: ContactInput };
 function readForm(formData: FormData): ContactInput {
   const v: ContactInput = {};
   for (const f of CONTACT_FIELDS) v[f] = String(formData.get(f) ?? "").trim();
-  return v;
+  return { ...v, ...readDetail(formData) };
 }
 
 const REQUIRED: [keyof ContactInput, string][] = [
@@ -45,6 +46,8 @@ function toRow(v: ContactInput) {
     linkedin_url: linkedin,
     notes: v.notes || null,
     owner_id: v.owner_id || null,
+    // Source detail, other contact info, social links and address (shared with leads).
+    ...detailRow(v),
   };
 }
 
@@ -66,6 +69,8 @@ async function resolveCompany(workspaceId: string, name: string): Promise<string
 }
 
 function friendly(error: { code?: string; message: string }) {
+  const detail = detailError(error.message);
+  if (detail) return detail;
   if (error.code === "23505") return "A contact with that email already exists in this workspace.";
   if (error.message.includes("contacts_has_identity")) return "Add a name or an email.";
   if (error.message.includes("email_check")) return "That email address doesn't look right.";

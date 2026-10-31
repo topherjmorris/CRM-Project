@@ -31,6 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   deal_contact_added: Users,
   lead_created: UserRoundSearch,
   lead_status_changed: ArrowRight,
+  lead_stage_changed: ArrowRight,
   lead_updated: Pencil,
   lead_converted: ArrowRightLeft,
   task_created: ListTodo,
@@ -54,6 +55,20 @@ const FIELD_LABELS: Record<string, string> = {
   domain: "Website",
   industry: "Industry",
   size: "Employees",
+  source_detail: "Source detail",
+  mobile_phone: "Mobile phone",
+  secondary_email: "Second email",
+  website: "Website",
+  facebook_url: "Facebook",
+  instagram_url: "Instagram",
+  x_url: "X",
+  address_line1: "Street address",
+  address_line2: "Apt / suite",
+  city: "City",
+  region: "State / region",
+  postal_code: "Postal code",
+  country: "Country",
+  company_name: "Company",
 };
 
 function show(v: unknown) {
@@ -119,6 +134,9 @@ function Describe({ item, slug, subject }: { item: TimelineItem; slug: string; s
       return <>{dealLink ?? "Deal"} marked lost</>;
     case "lead_created":
       return <>Lead added{str(m, "source") && str(m, "source") !== "manual" ? <> from {str(m, "source")}</> : null}</>;
+    case "lead_stage_changed":
+      return <>Lead moved from {str(m, "from")} to {str(m, "to")}</>;
+    // Older entries, from before lead stages were editable.
     case "lead_status_changed":
       return <>Lead moved from {LEAD_STATUS[str(m, "from")] ?? str(m, "from")} to {LEAD_STATUS[str(m, "to")] ?? str(m, "to")}</>;
     case "lead_updated":

@@ -25,14 +25,17 @@ export default async function ConvertLeadPage({ params }: Props) {
     getPipelines(ws.id),
   ]);
   if (!l) notFound();
-  if (l.status === "converted") redirect(`/w/${slug}/leads/${l.id}`);
+  if (l.stage_kind === "converted") redirect(`/w/${slug}/leads/${l.id}`);
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <div>
         <Link href={`/w/${slug}/leads/${l.id}`} className="text-sm text-muted-foreground hover:underline">← {leadName(l)}</Link>
         <h2 className="mt-1 text-2xl font-semibold">Convert to contact</h2>
-        <p className="text-sm text-muted-foreground">The lead&apos;s notes and history move to the new contact&apos;s timeline.</p>
+        <p className="text-sm text-muted-foreground">
+          The lead&apos;s notes and history move to the new contact&apos;s timeline. Address, other contact info and
+          social links copy over too.
+        </p>
       </div>
       <ConvertLeadForm
         action={convertLead.bind(null, slug, l.id)}

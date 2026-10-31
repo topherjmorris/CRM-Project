@@ -178,61 +178,100 @@ export type Database = {
       }
       contacts: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
           company_id: string | null
           company_name: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          facebook_url: string | null
           first_name: string
           id: string
+          instagram_url: string | null
           job_title: string | null
           last_name: string
           lead_score: number
           linkedin_url: string | null
+          mobile_phone: string | null
           notes: string | null
           owner_id: string | null
           phone: string | null
+          postal_code: string | null
+          region: string | null
+          secondary_email: string | null
           source: string
+          source_detail: string | null
           updated_at: string
+          website: string | null
           workspace_id: string
+          x_url: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           company_id?: string | null
           company_name?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          facebook_url?: string | null
           first_name?: string
           id?: string
+          instagram_url?: string | null
           job_title?: string | null
           last_name?: string
           lead_score?: number
           linkedin_url?: string | null
+          mobile_phone?: string | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          secondary_email?: string | null
           source?: string
+          source_detail?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id: string
+          x_url?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           company_id?: string | null
           company_name?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          facebook_url?: string | null
           first_name?: string
           id?: string
+          instagram_url?: string | null
           job_title?: string | null
           last_name?: string
           lead_score?: number
           linkedin_url?: string | null
+          mobile_phone?: string | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          secondary_email?: string | null
           source?: string
+          source_detail?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id?: string
+          x_url?: string | null
         }
         Relationships: [
           {
@@ -380,66 +419,143 @@ export type Database = {
           },
         ]
       }
-      leads: {
+      lead_stages: {
         Row: {
-          company_name: string | null
-          converted_at: string | null
-          converted_contact_id: string | null
           created_at: string
-          created_by: string | null
-          email: string | null
-          first_name: string
           id: string
-          job_title: string | null
-          last_name: string
-          linkedin_url: string | null
-          notes: string | null
-          owner_id: string | null
-          phone: string | null
-          source: string
-          status: Database["public"]["Enums"]["lead_status"]
-          updated_at: string
+          kind: Database["public"]["Enums"]["lead_stage_kind"]
+          name: string
+          position: number
           workspace_id: string
         }
         Insert: {
-          company_name?: string | null
-          converted_at?: string | null
-          converted_contact_id?: string | null
           created_at?: string
-          created_by?: string | null
-          email?: string | null
-          first_name?: string
           id?: string
-          job_title?: string | null
-          last_name?: string
-          linkedin_url?: string | null
-          notes?: string | null
-          owner_id?: string | null
-          phone?: string | null
-          source?: string
-          status?: Database["public"]["Enums"]["lead_status"]
-          updated_at?: string
+          kind?: Database["public"]["Enums"]["lead_stage_kind"]
+          name: string
+          position?: number
           workspace_id: string
         }
         Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["lead_stage_kind"]
+          name?: string
+          position?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_stages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          company_name: string | null
+          converted_at: string | null
+          converted_contact_id: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          facebook_url: string | null
+          first_name: string
+          id: string
+          instagram_url: string | null
+          job_title: string | null
+          last_name: string
+          linkedin_url: string | null
+          mobile_phone: string | null
+          notes: string | null
+          owner_id: string | null
+          phone: string | null
+          postal_code: string | null
+          region: string | null
+          secondary_email: string | null
+          source: string
+          source_detail: string | null
+          stage_id: string
+          stage_kind: Database["public"]["Enums"]["lead_stage_kind"]
+          updated_at: string
+          website: string | null
+          workspace_id: string
+          x_url: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           company_name?: string | null
           converted_at?: string | null
           converted_contact_id?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          facebook_url?: string | null
           first_name?: string
           id?: string
+          instagram_url?: string | null
           job_title?: string | null
           last_name?: string
           linkedin_url?: string | null
+          mobile_phone?: string | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          secondary_email?: string | null
           source?: string
-          status?: Database["public"]["Enums"]["lead_status"]
+          source_detail?: string | null
+          stage_id: string
+          stage_kind?: Database["public"]["Enums"]["lead_stage_kind"]
           updated_at?: string
+          website?: string | null
+          workspace_id: string
+          x_url?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company_name?: string | null
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          facebook_url?: string | null
+          first_name?: string
+          id?: string
+          instagram_url?: string | null
+          job_title?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          mobile_phone?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          secondary_email?: string | null
+          source?: string
+          source_detail?: string | null
+          stage_id?: string
+          stage_kind?: Database["public"]["Enums"]["lead_stage_kind"]
+          updated_at?: string
+          website?: string | null
           workspace_id?: string
+          x_url?: string | null
         }
         Relationships: [
           {
@@ -447,6 +563,13 @@ export type Database = {
             columns: ["converted_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "lead_stages"
             referencedColumns: ["id"]
           },
           {
@@ -767,6 +890,7 @@ export type Database = {
         }
         Returns: string
       }
+      create_default_lead_stages: { Args: { ws: string }; Returns: undefined }
       create_default_pipeline: { Args: { ws: string }; Returns: string }
       create_workspace: {
         Args: { ws_name: string; ws_slug: string }
@@ -812,12 +936,7 @@ export type Database = {
       }
     }
     Enums: {
-      lead_status:
-        | "new"
-        | "contacted"
-        | "qualified"
-        | "unqualified"
-        | "converted"
+      lead_stage_kind: "open" | "unqualified" | "converted"
       stage_kind: "open" | "won" | "lost"
       task_type: "todo" | "call" | "linkedin" | "email"
       workspace_role: "owner" | "admin" | "member"
@@ -951,13 +1070,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      lead_status: [
-        "new",
-        "contacted",
-        "qualified",
-        "unqualified",
-        "converted",
-      ],
+      lead_stage_kind: ["open", "unqualified", "converted"],
       stage_kind: ["open", "won", "lost"],
       task_type: ["todo", "call", "linkedin", "email"],
       workspace_role: ["owner", "admin", "member"],

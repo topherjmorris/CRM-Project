@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
+import type { DetailField } from "@/lib/leads";
 
 export type Contact = Database["public"]["Tables"]["contacts"]["Row"];
 export type Member = { id: string; label: string };
@@ -17,7 +18,7 @@ export const CONTACT_FIELDS = [
   "notes",
   "owner_id",
 ] as const;
-export type ContactInput = Partial<Record<(typeof CONTACT_FIELDS)[number], string>>;
+export type ContactInput = Partial<Record<(typeof CONTACT_FIELDS)[number] | DetailField, string>>;
 
 export function contactName(c: Pick<Contact, "first_name" | "last_name" | "email">) {
   return [c.first_name, c.last_name].filter(Boolean).join(" ") || c.email || "Unnamed contact";

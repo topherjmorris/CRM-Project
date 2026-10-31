@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { LeadFormState } from "@/app/w/[slug]/leads/actions";
 import type { Member } from "@/lib/contacts";
-import { LEAD_SOURCES, LEAD_STATUSES, type LeadInput } from "@/lib/leads";
+import { DetailFields } from "@/components/detail-fields";
+import { DETAIL_FIELDS, LEAD_SOURCES, sourceLabel, type LeadInput, type LeadStage } from "@/lib/leads";
 
 type Props = {
   action: (prev: LeadFormState, formData: FormData) => Promise<LeadFormState>;
   initial: LeadInput;
   members: Member[];
+  // Stages a person can pick: open and unqualified (Converted is set by Convert).
+  stages: LeadStage[];
   submitLabel: string;
   savedMessage?: string;
 };
@@ -34,7 +37,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function LeadForm({ action, initial, members, submitLabel, savedMessage }: Props) {
+export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -61,17 +64,17 @@ export function LeadForm({ action, initial, members, submitLabel, savedMessage }
         <Field id="job_title" label="Job title">
           <Input id="job_title" name="job_title" defaultValue={v.job_title} maxLength={120} />
         </Field>
-        <Field id="status" label="Status">
-          <select id="status" name="status" defaultValue={v.status || "new"} className={selectClass}>
-            {LEAD_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+        <Field id="stage_id" label="Stage">
+          <select id="stage_id" name="stage_id" defaultValue={v.stage_id || stages[0]?.id} className={selectClass}>
+            {stages.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </Field>
         <Field id="source" label="Source">
           <select id="source" name="source" defaultValue={v.source || "manual"} className={selectClass}>
             {LEAD_SOURCES.map((s) => (
-              <option key={s} value={s}>{s === "manual" ? "Added by hand" : s[0].toUpperCase() + s.slice(1)}</option>
+              <option key={s} value={s}>{sourceLabel(s)}</option>
             ))}
           </select>
         </Field>
@@ -88,6 +91,7 @@ export function LeadForm({ action, initial, members, submitLabel, savedMessage }
         </Field>
       </div>
       <p className="-mt-2 text-xs text-muted-foreground">An email or a phone number is required.</p>
+      <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={3} maxLength={10000} />
       </Field>

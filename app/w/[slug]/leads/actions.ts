@@ -1,29 +1,32 @@
 "use server";
 
 // Lead actions: create, update, delete and convert.
-// Leads need a first and last name plus an email or phone. Converting runs the
+// Leads need a first and last name plus an email or phone; the stage comes from the
+// workspace's lead stages. Converting runs the
 // convert_lead() database function (migration 20261031000001_leads.sql), which
 // creates the contact, company and optional deal in one transaction.
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { LEAD_FIELDS, LEAD_STATUSES, type LeadInput, type LeadStatus } from "@/lib/leads";
+import { detailError, detailRow, LEAD_FIELDS, readDetail, type LeadInput } from "@/lib/leads";
+import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
+
+type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
 
 export type LeadFormState = { error?: string; values?: LeadInput };
 
 function readForm(formData: FormData): LeadInput {
   const v: LeadInput = {};
   for (const f of LEAD_FIELDS) v[f] = String(formData.get(f) ?? "").trim();
-  return v;
+  return { ...v, ...readDetail(formData) };
 }
 
 function validate(v: LeadInput) {
   const gaps = [!v.first_name && "first name", !v.last_name && "last name"].filter(Boolean);
   if (gaps.length) return `Please fill in: ${gaps.join(", ")}.`;
   if (!v.email && !v.phone) return "Add an email or a phone number.";
-  if (v.status && !LEAD_STATUSES.some((s) => s.value === v.status)) return "Pick a status.";
 }
 
 function toRow(v: LeadInput) {
@@ -38,13 +41,17 @@ function toRow(v: LeadInput) {
     company_name: v.company_name || null,
     linkedin_url: linkedin,
     source: v.source || "manual",
-    status: (v.status || "new") as LeadStatus,
+    // Empty stage = the database puts the lead in the first open stage.
+    ...(v.stage_id ? { stage_id: v.stage_id } : {}),
     notes: v.notes || null,
     owner_id: v.owner_id || null,
+    ...detailRow(v),
   };
 }
 
 function friendly(error: { message: string }) {
+  const detail = detailError(error.message);
+  if (detail) return detail;
   if (error.message.includes("email_check")) return "That email address doesn't look right.";
   return error.message;
 }
@@ -61,7 +68,12 @@ export async function createLead(slug: string, _prev: LeadFormState, formData: F
   if (!ws) return { error: "Workspace not found.", values };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.from("leads").insert({ ...toRow(values), workspace_id: ws.id }).select("id").single();
+  // stage_id is filled in by a trigger when empty; the cast covers that for the types.
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({ ...toRow(values), workspace_id: ws.id } as LeadInsert)
+    .select("id")
+    .single();
   if (error) return { error: friendly(error), values };
   refresh(slug);
   redirect(`/w/${slug}/leads/${data.id}`);
@@ -73,7 +85,7 @@ export async function updateLead(slug: string, id: string, _prev: LeadFormState,
   if (invalid) return { error: invalid, values };
   const supabase = await createClient();
   // Converted leads are read-only; the filter keeps an old tab from editing one.
-  const { error } = await supabase.from("leads").update(toRow(values)).eq("id", id).neq("status", "converted");
+  const { error } = await supabase.from("leads").update(toRow(values)).eq("id", id).neq("stage_kind", "converted");
   if (error) return { error: friendly(error), values };
   refresh(slug);
   return { values };

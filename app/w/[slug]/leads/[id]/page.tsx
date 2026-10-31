@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getTimeline } from "@/lib/activities";
 import { getMembers } from "@/lib/contacts";
-import { leadName, STATUS_LABEL, type LeadInput } from "@/lib/leads";
+import { getLeadStages } from "@/lib/lead-stages";
+import { detailInput, leadName, sourceLabel, type LeadInput } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { deleteLead, updateLead } from "../actions";
@@ -25,15 +26,17 @@ export default async function LeadPage({ params }: Props) {
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
-  const [{ data: l }, members] = await Promise.all([
+  const [{ data: l }, members, stages] = await Promise.all([
     supabase.from("leads").select("*").eq("id", id).eq("workspace_id", ws.id).maybeSingle(),
     getMembers(ws.id),
+    getLeadStages(ws.id),
   ]);
   if (!l) notFound();
   const [timeline, { data: auth }] = await Promise.all([getTimeline(ws.id, { kind: "lead", id: l.id }), supabase.auth.getUser()]);
 
   const name = leadName(l);
-  const converted = l.status === "converted";
+  const converted = l.stage_kind === "converted";
+  const stage = stages.find((s) => s.id === l.stage_id);
   const initial: LeadInput = {
     first_name: l.first_name,
     last_name: l.last_name,
@@ -43,9 +46,10 @@ export default async function LeadPage({ params }: Props) {
     company_name: l.company_name ?? "",
     linkedin_url: l.linkedin_url ?? "",
     source: l.source,
-    status: l.status,
+    stage_id: l.stage_id,
     notes: l.notes ?? "",
     owner_id: l.owner_id ?? "",
+    ...detailInput(l),
   };
 
   return (
@@ -55,8 +59,9 @@ export default async function LeadPage({ params }: Props) {
           <Link href={`/w/${slug}/leads`} className="text-sm text-muted-foreground hover:underline">← Leads</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{name}</h2>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant={converted ? "default" : "secondary"}>{STATUS_LABEL[l.status]}</Badge>
+            <Badge variant={converted ? "default" : l.stage_kind === "unqualified" ? "outline" : "secondary"}>{stage?.name ?? "No stage"}</Badge>
             {l.company_name && <span>{l.company_name}</span>}
+            <span>· {sourceLabel(l.source)}{l.source_detail && ` (${l.source_detail})`}</span>
             <span>· Added <LocalDateTime iso={l.created_at} /></span>
           </div>
         </div>
@@ -85,7 +90,7 @@ export default async function LeadPage({ params }: Props) {
       ) : (
         <section className="flex flex-col gap-3">
           <h3 className="font-medium">Details</h3>
-          <LeadForm key={l.updated_at} action={updateLead.bind(null, slug, l.id)} initial={initial} members={members} submitLabel="Save changes" savedMessage="Saved" />
+          <LeadForm key={l.updated_at} action={updateLead.bind(null, slug, l.id)} initial={initial} members={members} stages={stages.filter((s) => s.kind !== "converted")} submitLabel="Save changes" savedMessage="Saved" />
         </section>
       )}
 

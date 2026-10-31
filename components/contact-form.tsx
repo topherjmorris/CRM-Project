@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DetailFields } from "@/components/detail-fields";
 import type { ContactInput, Member } from "@/lib/contacts";
+import { DETAIL_FIELDS } from "@/lib/leads";
 import type { FormState } from "@/app/w/[slug]/contacts/actions";
 
 type Props = {
@@ -83,6 +85,7 @@ export function ContactForm({ action, initial, members, companies, submitLabel, 
           </select>
         </Field>
       </div>
+      <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={4} maxLength={10000} />
       </Field>

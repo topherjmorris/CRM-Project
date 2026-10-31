@@ -1,28 +1,20 @@
-// Leads list: status tabs (open statuses by default, plus Converted and All),
-// search across name, email, company and phone, 50 per page.
+// Leads list: tabs for Open (every open stage), each of the workspace's stages,
+// and All; search across name, email, company and phone, 50 per page.
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Search, UserRoundSearch } from "lucide-react";
+import { Plus, Search, Settings2, UserRoundSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getMembers } from "@/lib/contacts";
-import { leadName, STATUS_LABEL, type LeadStatus } from "@/lib/leads";
+import { getLeadStages } from "@/lib/lead-stages";
+import { leadName } from "@/lib/leads";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 const PAGE_SIZE = 50;
-const TABS: { id: string; label: string; statuses: LeadStatus[] | null }[] = [
-  { id: "open", label: "Open", statuses: ["new", "contacted", "qualified"] },
-  { id: "new", label: "New", statuses: ["new"] },
-  { id: "contacted", label: "Contacted", statuses: ["contacted"] },
-  { id: "qualified", label: "Qualified", statuses: ["qualified"] },
-  { id: "unqualified", label: "Unqualified", statuses: ["unqualified"] },
-  { id: "converted", label: "Converted", statuses: ["converted"] },
-  { id: "all", label: "All", statuses: null },
-];
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ q?: string; page?: string; tab?: string }> };
 
@@ -31,18 +23,27 @@ export default async function LeadsPage({ params, searchParams }: Props) {
   const { q = "", page = "1", tab: tabParam } = await searchParams;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
-  const tab = TABS.find((t) => t.id === tabParam) ?? TABS[0];
+  const stages = await getLeadStages(ws.id);
+  const stageById = new Map(stages.map((st) => [st.id, st]));
+  // "open" = every open stage; a stage id = that stage; "all" = everything.
+  const tabs = [
+    { id: "open", label: "Open" },
+    ...stages.map((st) => ({ id: st.id, label: st.name })),
+    { id: "all", label: "All" },
+  ];
+  const tab = tabs.find((t) => t.id === tabParam) ?? tabs[0];
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const from = (pageNum - 1) * PAGE_SIZE;
   const supabase = await createClient();
   let query = supabase
     .from("leads")
-    .select("id, first_name, last_name, email, phone, company_name, status, source, owner_id, created_at", { count: "exact" })
+    .select("id, first_name, last_name, email, phone, company_name, stage_id, stage_kind, source, owner_id, created_at", { count: "exact" })
     .eq("workspace_id", ws.id)
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
-  if (tab.statuses) query = query.in("status", tab.statuses);
+  if (tab.id === "open") query = query.eq("stage_kind", "open");
+  else if (tab.id !== "all") query = query.eq("stage_id", tab.id);
   // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
   if (term) {
@@ -65,14 +66,19 @@ export default async function LeadsPage({ params, searchParams }: Props) {
           <Input name="q" defaultValue={q} placeholder="Search name, email, company, phone" className="pl-8" aria-label="Search leads" />
         </form>
         <span className="text-sm text-muted-foreground tabular-nums">{total} {total === 1 ? "lead" : "leads"}</span>
-        <Link href={`${base}/new`} className={buttonVariants({ className: "ml-auto" })}>
-          <Plus /> Add lead
-        </Link>
+        <div className="ml-auto flex gap-2">
+          <Link href={`${base}/stages`} className={buttonVariants({ variant: "outline" })}>
+            <Settings2 /> Stages
+          </Link>
+          <Link href={`${base}/new`} className={buttonVariants()}>
+            <Plus /> Add lead
+          </Link>
+        </div>
       </div>
 
-      <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 text-sm" aria-label="Lead status">
+      <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 text-sm" aria-label="Lead stages">
         <div className="flex gap-1 rounded-lg bg-muted p-1">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <Link
               key={t.id}
               href={`${base}?${new URLSearchParams({ tab: t.id, ...(q ? { q } : {}) })}`}
@@ -101,7 +107,7 @@ export default async function LeadsPage({ params, searchParams }: Props) {
                 <TableHead>Name</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead className="hidden md:table-cell">Email / phone</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Stage</TableHead>
                 <TableHead className="hidden lg:table-cell">Owner</TableHead>
               </TableRow>
             </TableHeader>
@@ -114,7 +120,9 @@ export default async function LeadsPage({ params, searchParams }: Props) {
                   <TableCell>{l.company_name}</TableCell>
                   <TableCell className="hidden text-muted-foreground md:table-cell">{l.email ?? l.phone}</TableCell>
                   <TableCell>
-                    <Badge variant={l.status === "converted" ? "default" : l.status === "unqualified" ? "outline" : "secondary"}>{STATUS_LABEL[l.status]}</Badge>
+                    <Badge variant={l.stage_kind === "converted" ? "default" : l.stage_kind === "unqualified" ? "outline" : "secondary"}>
+                      {stageById.get(l.stage_id)?.name ?? "—"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground lg:table-cell">{l.owner_id ? ownerLabel.get(l.owner_id) : "—"}</TableCell>
                 </TableRow>
