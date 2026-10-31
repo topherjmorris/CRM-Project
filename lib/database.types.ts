@@ -192,6 +192,14 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      my_pending_invites: {
+        Args: never
+        Returns: {
+          role: Database["public"]["Enums"]["workspace_role"]
+          token: string
+          workspace_name: string
+        }[]
+      }
       has_workspace_role: {
         Args: {
           roles: Database["public"]["Enums"]["workspace_role"][]

@@ -30,6 +30,20 @@ export async function getMyWorkspaces(): Promise<WorkspaceWithRole[]> {
   });
 }
 
+export type PendingInvite = { token: string; workspace_name: string; role: WorkspaceRole };
+
+// Open invites addressed to the signed-in user's email for workspaces they haven't joined.
+export async function getMyPendingInvites(): Promise<PendingInvite[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_pending_invites");
+  if (error) {
+    // Don't block sign-in if the lookup fails; the user can still open the invite link.
+    console.error("my_pending_invites failed", error);
+    return [];
+  }
+  return (data ?? []) as PendingInvite[];
+}
+
 export function slugify(name: string): string {
   return name
     .toLowerCase()
