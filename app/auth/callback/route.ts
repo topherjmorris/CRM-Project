@@ -1,3 +1,8 @@
+// /auth/callback: Supabase sends people here after they click an email link or
+// approve Google sign-in. Swaps the one-time `code` for a session cookie (PKCE flow),
+// then redirects to `next`. This URL must be listed in Supabase → Authentication →
+// URL Configuration → Redirect URLs for every environment.
+
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/site-url";

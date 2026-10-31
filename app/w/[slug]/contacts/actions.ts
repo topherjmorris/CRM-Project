@@ -1,3 +1,8 @@
+// Create, update and delete contacts.
+// Contacts added by hand must have first name, last name, email and company. The
+// database is looser on purpose so imports and ad leads with gaps still save.
+// The company is matched by name (case-insensitive) or created on the fly.
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -46,6 +51,7 @@ function toRow(v: ContactInput) {
 // Find the workspace's company with this name (case-insensitive), or create it.
 async function resolveCompany(workspaceId: string, name: string): Promise<string> {
   const supabase = await createClient();
+  // ilike treats % and _ as wildcards; escape them so "50% Off LLC" matches exactly.
   const escaped = name.replace(/[\\%_]/g, (ch) => `\\${ch}`);
   const { data: found } = await supabase
     .from("companies")

@@ -1,3 +1,6 @@
+// Contacts list: search across name, email, company and phone, 50 per page.
+// Search runs in the database (ilike) so it works across all contacts, not just this page.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus, Search, Users } from "lucide-react";
@@ -29,6 +32,7 @@ export default async function ContactsPage({ params, searchParams }: Props) {
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
+  // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
   if (term) {
     const like = `%${term}%`;

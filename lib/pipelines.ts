@@ -1,3 +1,5 @@
+// Loads a workspace's pipelines with their stages in order (server only).
+
 import { createClient } from "@/lib/supabase/server";
 
 export async function getPipelines(workspaceId: string) {

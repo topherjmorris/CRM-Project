@@ -1,3 +1,6 @@
+// /invite/[token]: page an invited teammate opens from their invite link. Shows who
+// invited them and lets them join, but only when signed in with the invited email.
+
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";

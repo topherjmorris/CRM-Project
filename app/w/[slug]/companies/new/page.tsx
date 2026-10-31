@@ -1,3 +1,5 @@
+// New company form.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CompanyForm } from "@/components/company-form";

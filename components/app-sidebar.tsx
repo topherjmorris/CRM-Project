@@ -1,3 +1,8 @@
+// Left navigation for a workspace: workspace switcher, CRM and Grow sections,
+// Settings, and the account menu (sign out). Collapses to icons on desktop and turns
+// into a slide-out menu on phones. Menu items come from lib/nav.ts.
+// Vendor: shadcn/ui Sidebar on Base UI (docs/VENDORS.md).
+
 "use client";
 
 import Link from "next/link";

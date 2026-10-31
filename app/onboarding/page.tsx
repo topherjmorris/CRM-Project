@@ -1,3 +1,6 @@
+// /onboarding: create a workspace (one per business). Also lists open invites so an
+// invited person can join their team's workspace instead of making a new one.
+
 import Link from "next/link";
 import { getMyPendingInvites } from "@/lib/workspaces";
 import { createWorkspaceAction } from "./actions";

@@ -1,3 +1,5 @@
+// Companies list with search (name, website, industry) and a contact count per company.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Building2, Plus, Search } from "lucide-react";
@@ -28,6 +30,7 @@ export default async function CompaniesPage({ params, searchParams }: Props) {
     .order("name")
     .range(from, from + PAGE_SIZE - 1);
 
+  // Characters with meaning in PostgREST's or() syntax are stripped so a search can't break the query.
   const term = q.trim().replace(/[%_,()]/g, " ").trim();
   if (term) {
     const like = `%${term}%`;

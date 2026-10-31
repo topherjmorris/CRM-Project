@@ -1,3 +1,7 @@
+// Workspace lookups for the signed-in user: their workspaces and role, open invites,
+// slugs, and creating a workspace. All queries run as the user, so row-level security
+// limits results to workspaces they belong to.
+
 import { createClient } from "@/lib/supabase/server";
 
 export type WorkspaceRole = "owner" | "admin" | "member";
@@ -18,6 +22,7 @@ export async function getMyWorkspaces(): Promise<WorkspaceWithRole[]> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return [];
 
+  // One row per membership, with the workspace embedded (PostgREST foreign-key join).
   const { data, error } = await supabase
     .from("workspace_members")
     .select("role, workspaces(*)")

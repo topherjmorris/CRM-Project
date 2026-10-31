@@ -1,3 +1,6 @@
+// Creates a workspace through the create_workspace() database function, which also
+// makes the caller its owner (see supabase/migrations/20261019000001_workspaces.sql).
+
 "use server";
 
 import { redirect } from "next/navigation";

@@ -1,3 +1,6 @@
+// Accepts an invite via the accept_invite() database function, which checks the
+// token, expiry and email before adding the member.
+
 "use server";
 
 import { redirect } from "next/navigation";

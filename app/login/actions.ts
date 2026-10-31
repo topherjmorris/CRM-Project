@@ -1,3 +1,7 @@
+// Server actions for signing in and out.
+// Both sign-in methods send the browser back to /auth/callback, which finishes sign-in.
+// Vendor: Supabase Auth (email OTP links + Google OAuth provider). See docs/VENDORS.md.
+
 "use server";
 
 import { redirect } from "next/navigation";

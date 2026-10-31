@@ -1,3 +1,5 @@
+// Deal create/edit form; same pattern as contact-form.tsx. Stages are grouped by pipeline.
+
 "use client";
 
 import { useActionState } from "react";

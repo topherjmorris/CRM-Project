@@ -1,3 +1,5 @@
+// Copies text (e.g. an invite link) to the clipboard, with a fallback prompt if the browser blocks it.
+
 "use client";
 
 import { useState } from "react";

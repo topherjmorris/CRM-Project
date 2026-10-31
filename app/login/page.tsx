@@ -1,3 +1,7 @@
+// /login: sign-in page. "Continue with Google" or an emailed sign-in link. Signing in
+// for the first time creates the account. `next` is where to go afterwards.
+// Vendor: Supabase Auth; Google sign-in also needs Google Cloud (docs/VENDORS.md).
+
 import { signInWithEmail, signInWithGoogle } from "./actions";
 
 type Props = { searchParams: Promise<{ next?: string; error?: string; sent?: string }> };

@@ -1,3 +1,5 @@
+// Company types, the employee-size options, and website normalization.
+
 import type { Database } from "@/lib/database.types";
 
 export type Company = Database["public"]["Tables"]["companies"]["Row"];

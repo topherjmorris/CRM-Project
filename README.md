@@ -3,6 +3,9 @@
 CRM, outbound outreach, nurturing, social ads and a template site builder for small businesses.
 Next.js (App Router, TypeScript, Tailwind) + Supabase.
 
+Outside services (Supabase, Inngest, GitHub, Google...), what each costs and where it's
+used: see [docs/VENDORS.md](docs/VENDORS.md).
+
 ## Setup
 
 1. Install Node 24 (https://nodejs.org or `nvm install`).

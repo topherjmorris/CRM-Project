@@ -1,3 +1,7 @@
+// Add, edit and delete notes on the Activity timeline. Only notes are written here;
+// all other activity types come from database triggers (migrations 07-09) and,
+// later, background jobs. Row-level security only lets people edit their own notes.
+
 "use server";
 
 import { revalidatePath } from "next/cache";

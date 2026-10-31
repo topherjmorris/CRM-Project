@@ -1,3 +1,5 @@
+// Contact types and shared lookups: display names, member and company pickers.
+
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 

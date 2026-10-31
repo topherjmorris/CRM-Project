@@ -1,3 +1,5 @@
+// Workspace home. Placeholder until the CRM dashboard (CRM-09).
+
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 export default async function WorkspaceHome({ params }: { params: Promise<{ slug: string }> }) {

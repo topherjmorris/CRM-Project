@@ -1,3 +1,5 @@
+// Public landing page at /. Placeholder until the marketing site (MKT-02).
+
 export default function Home() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 py-24">

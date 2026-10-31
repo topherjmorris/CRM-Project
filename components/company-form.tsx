@@ -1,3 +1,5 @@
+// Company create/edit form; same pattern as contact-form.tsx.
+
 "use client";
 
 import { useActionState } from "react";

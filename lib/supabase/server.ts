@@ -1,3 +1,8 @@
+// Supabase client for server code (Server Components, Server Actions, Route Handlers).
+// Acts as the signed-in user via their cookie, so row-level security applies. Use this
+// by default.
+// Vendor: Supabase (docs/VENDORS.md).
+
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
 import { cookies } from "next/headers";
@@ -18,7 +23,8 @@ export async function createClient() {
           try {
             cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
           } catch {
-            // Called from a Server Component; middleware refreshes the session instead.
+            // Server Components can't set cookies. That's fine: proxy.ts refreshes the
+            // session on the next request.
           }
         },
       },

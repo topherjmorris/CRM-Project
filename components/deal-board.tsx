@@ -1,3 +1,8 @@
+// Drag-and-drop pipeline board (native HTML drag events, no library). Moves show
+// instantly via useOptimistic and are saved by the moveDeal server action; on failure
+// the board snaps back and shows an error. Touch screens can't drag, so phones change
+// stage from the deal page.
+
 "use client";
 
 import Link from "next/link";
@@ -34,7 +39,9 @@ export function DealBoard({ slug, stages, deals }: Props) {
     dragId.current = null;
     setOver(null);
     if (!id) return;
+    // Neighbours in the target column, ignoring the card being moved.
     const col = columns.find((c) => c.stage.id === stageId)!.deals.filter((d) => d.id !== id);
+    // New position: midpoint between neighbours, or one step past the end, or 0 for an empty column.
     const before = col[index - 1]?.position;
     const after = col[index]?.position;
     const position =
@@ -42,6 +49,7 @@ export function DealBoard({ slug, stages, deals }: Props) {
     const current = optimistic.find((d) => d.id === id);
     if (current && current.stage_id === stageId && current.position === position) return;
 
+    // Show the move immediately; useOptimistic reverts it if the save throws.
     startTransition(async () => {
       applyMove({ id, stage_id: stageId, position });
       try {

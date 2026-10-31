@@ -1,3 +1,5 @@
+// Helpers for building absolute URLs for auth redirects and keeping `next` redirects on our own site.
+
 import { headers } from "next/headers";
 
 // Absolute origin for auth redirects: NEXT_PUBLIC_SITE_URL in deployed envs, else the request host.

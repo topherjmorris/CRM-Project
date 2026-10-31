@@ -1,3 +1,5 @@
+// Section name shown in the workspace top bar, worked out from the current URL.
+
 "use client";
 
 import { usePathname } from "next/navigation";

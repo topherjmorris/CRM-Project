@@ -1,3 +1,7 @@
+// Background job: deletes team invites that were never accepted and expired more than
+// 7 days ago. Runs nightly at 03:00 UTC, or on demand by sending the
+// "maintenance/invites.cleanup" event (Invoke in the Inngest dashboard).
+
 import { inngest } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 

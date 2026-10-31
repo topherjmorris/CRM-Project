@@ -1,3 +1,6 @@
+// Settings → Team: members and their roles, invite links, revoking invites.
+// Only owners and admins see invite controls; the database enforces the same rules.
+
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { createClient } from "@/lib/supabase/server";

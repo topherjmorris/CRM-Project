@@ -1,3 +1,7 @@
+// Activity timeline used on contact, company and deal pages: note composer,
+// the list of events with date and time, and edit/delete for your own notes.
+// Event wording lives in Describe(); add a case there when a new activity type appears.
+
 "use client";
 
 import Link from "next/link";

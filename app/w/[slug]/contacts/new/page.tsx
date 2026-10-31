@@ -1,3 +1,5 @@
+// New contact form. Owner defaults to the person adding it.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";

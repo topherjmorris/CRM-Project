@@ -1,3 +1,6 @@
+// Loads the Activity timeline for a contact, company or deal (server only).
+// Joins in contact/deal names and resolves people's names for "by ..." and owner changes.
+
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 import { changesOf } from "@/lib/activity-changes";

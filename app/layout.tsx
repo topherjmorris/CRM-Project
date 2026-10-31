@@ -1,3 +1,7 @@
+// Root layout for every page: global CSS, the Geist font (next/font downloads it at
+// build time, so no request goes to Google at runtime) and the tooltip provider that
+// shadcn/Base UI tooltips (used by the collapsed sidebar) need.
+
 import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";

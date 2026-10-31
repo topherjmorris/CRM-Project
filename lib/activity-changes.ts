@@ -1,3 +1,5 @@
+// Reads the list of changed fields from an "updated" activity. Used on server and client.
+
 // Shared by the server loader and the client timeline.
 export type FieldChange = { field: string; from?: unknown; to?: unknown };
 

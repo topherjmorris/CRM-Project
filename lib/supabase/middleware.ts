@@ -1,3 +1,8 @@
+// Session refresh + route protection, called from proxy.ts on every request.
+// Keeps the Supabase sign-in cookie fresh and redirects signed-out visitors on
+// /app, /w/* and /onboarding to /login?next=<where they were going>.
+// Vendor: Supabase Auth (docs/VENDORS.md).
+
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
 import { NextResponse, type NextRequest } from "next/server";

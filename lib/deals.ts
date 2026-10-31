@@ -1,3 +1,6 @@
+// Deal types and money formatting. Safe to import from browser components: keep
+// anything that talks to the database in lib/pipelines.ts instead.
+
 import type { Database } from "@/lib/database.types";
 
 export type Pipeline = Database["public"]["Tables"]["pipelines"]["Row"];

@@ -1,3 +1,6 @@
+// Date/time helpers that use the viewer's own time zone. The server doesn't know the
+// viewer's zone, so it renders UTC and the browser swaps in local time after loading.
+
 "use client";
 
 import { useSyncExternalStore } from "react";

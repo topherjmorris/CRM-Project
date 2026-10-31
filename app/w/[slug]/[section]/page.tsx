@@ -1,3 +1,6 @@
+// Catch-all placeholder for sidebar sections that aren't built yet (Outreach, Ads...).
+// A real route folder with the same name takes priority over this one.
+
 import { notFound } from "next/navigation";
 import { NAV_GROUPS } from "@/lib/nav";
 

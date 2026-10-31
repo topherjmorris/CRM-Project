@@ -1,3 +1,6 @@
+// Team management actions: create/revoke invites, change roles, remove members.
+// Each checks the caller is an owner or admin; row-level security enforces it again.
+
 "use server";
 
 import { revalidatePath } from "next/cache";

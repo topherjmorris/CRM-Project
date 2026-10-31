@@ -1,3 +1,6 @@
+// Pipelines and stages settings: rename, reorder, add, delete, and mark stages as
+// Won/Lost (closed) or Open.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";

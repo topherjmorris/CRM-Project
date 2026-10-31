@@ -1,3 +1,5 @@
+// Delete button that asks for confirmation in a dialog before running the server action.
+
 "use client";
 
 import { Trash2 } from "lucide-react";

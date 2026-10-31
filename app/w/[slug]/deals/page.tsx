@@ -1,3 +1,6 @@
+// Deals board for one pipeline: drag-and-drop columns per stage, with open count and
+// value at the top. ?pipeline=<id> picks the pipeline; defaults to the first.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";

@@ -1,3 +1,8 @@
+// Runs before every matching request (Next 16 renamed middleware.ts to proxy.ts).
+// Refreshes the Supabase sign-in cookie and sends signed-out visitors away from app
+// pages. The real logic lives in lib/supabase/middleware.ts.
+// Vendor: Supabase Auth (see docs/VENDORS.md).
+
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 

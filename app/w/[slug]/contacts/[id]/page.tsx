@@ -1,3 +1,6 @@
+// Contact profile: header, delete, edit form and Activity timeline. The timeline also
+// shows events from deals this contact is on.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";

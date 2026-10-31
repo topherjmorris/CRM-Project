@@ -1,3 +1,5 @@
+// Sidebar sections and items. Add a new section here and it shows up in the sidebar and page title.
+
 import {
   Building2,
   CheckSquare,

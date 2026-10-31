@@ -1,3 +1,6 @@
+// Pipeline and stage management. Stages and pipelines that still hold deals can't be
+// deleted (the database also refuses: deals.stage_id is ON DELETE RESTRICT).
+
 "use server";
 
 import { revalidatePath } from "next/cache";

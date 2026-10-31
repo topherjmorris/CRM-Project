@@ -1,3 +1,7 @@
+// Supabase client for browser code (Client Components). Uses the publishable key and
+// the user's session cookie, so row-level security applies.
+// Vendor: Supabase (docs/VENDORS.md).
+
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
 

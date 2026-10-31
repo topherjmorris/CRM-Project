@@ -1,3 +1,6 @@
+// Deal page: value and stage badge, people on the deal, edit form (also how to change
+// stage on a phone, where drag-and-drop doesn't work), delete, and Activity.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { X } from "lucide-react";

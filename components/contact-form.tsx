@@ -1,3 +1,6 @@
+// Contact create/edit form. Uses React's useActionState so a failed save keeps what was
+// typed and shows the server's error. Company suggestions come from existing companies.
+
 "use client";
 
 import { useActionState } from "react";

@@ -1,3 +1,6 @@
+// /app: where people land after signing in. Sends them to their first workspace,
+// to a pending invite if they were invited, or to onboarding to create a workspace.
+
 import { redirect } from "next/navigation";
 import { getMyPendingInvites, getMyWorkspaces } from "@/lib/workspaces";
 

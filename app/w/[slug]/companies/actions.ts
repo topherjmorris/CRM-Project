@@ -1,3 +1,7 @@
+// Create, update and delete companies. Websites are normalized to a bare domain
+// ("https://www.Acme.com/about" -> "acme.com") and must be unique per workspace.
+// Deleting a company keeps its contacts; they just lose the link.
+
 "use server";
 
 import { revalidatePath } from "next/cache";

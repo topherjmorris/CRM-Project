@@ -1,3 +1,8 @@
+// Shell for everything inside a workspace (/w/<slug>/...): the collapsible sidebar,
+// the top bar with the page title, and the page content. Returns 404 if the signed-in
+// user isn't a member of this workspace. The sidebar's open/closed state is remembered
+// in the `sidebar_state` cookie.
+
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";

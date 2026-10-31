@@ -1,3 +1,9 @@
+// Supabase client with the SECRET key. It bypasses row-level security and can read
+// and write every workspace. Only for background jobs and trusted server code, never
+// for anything a user triggers directly. `server-only` makes the build fail if a
+// browser component imports it.
+// Vendor: Supabase (docs/VENDORS.md).
+
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";

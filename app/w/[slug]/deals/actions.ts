@@ -1,3 +1,7 @@
+// Deal actions: create, update, move on the board, delete, and add/remove contacts.
+// Board order uses a float `position`: a dropped card gets the midpoint between its
+// new neighbours, so only the moved deal is written.
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -24,6 +28,7 @@ function parseValue(raw?: string): number | null {
 async function findOrCreateCompany(workspaceId: string, name?: string): Promise<string | null> {
   if (!name) return null;
   const supabase = await createClient();
+  // ilike treats % and _ as wildcards; escape them so the match is exact.
   const escaped = name.replace(/[\\%_]/g, (ch) => `\\${ch}`);
   const { data: found } = await supabase.from("companies").select("id").eq("workspace_id", workspaceId).ilike("name", escaped).maybeSingle();
   if (found) return found.id;

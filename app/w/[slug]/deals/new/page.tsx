@@ -1,3 +1,5 @@
+// New deal form. ?pipeline=<id> preselects that pipeline's first stage.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DealForm } from "@/components/deal-form";

@@ -1,3 +1,6 @@
+// Company profile: its people, edit form, delete, and an Activity timeline that also
+// includes events from the company's contacts and deals.
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus } from "lucide-react";

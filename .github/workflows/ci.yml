@@ -1,3 +1,6 @@
+# GitHub Actions CI: lint, typecheck and build on every push to main and every PR.
+# Vendor: GitHub Actions (free tier about 2,000 min/month on private repos; see docs/VENDORS.md).
+# The Supabase values are placeholders so the build can run; CI never talks to the database.
 name: CI
 on:
   push:
