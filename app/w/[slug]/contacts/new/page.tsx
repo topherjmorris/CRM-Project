@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";
 import { getCompanyNames, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
-import { getCustomFields } from "@/lib/custom-fields-server";
+import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { createContact } from "../actions";
 
@@ -13,7 +13,7 @@ export default async function NewContactPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
-  const customDefs = await getCustomFields(ws.id, "contact");
+  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "contact"), getHiddenFields(ws.id, "contact")]);
   const supabase = await createClient();
   const [{ data: auth }, members, companies] = await Promise.all([supabase.auth.getUser(), getMembers(ws.id), getCompanyNames(ws.id)]);
 
@@ -24,6 +24,7 @@ export default async function NewContactPage({ params }: { params: Promise<{ slu
         <h2 className="mt-1 text-2xl font-semibold">New contact</h2>
       </div>
       <ContactForm
+        hidden={hiddenFields}
         customDefs={customDefs}
         customValues={{}}
         action={createContact.bind(null, slug)}

@@ -8,9 +8,10 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ENTITIES, FIELD_TYPES, type CustomEntity } from "@/lib/custom-fields";
-import { getCustomFields } from "@/lib/custom-fields-server";
+import { BUILTIN_FIELDS } from "@/lib/builtin-fields";
+import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
-import { addField, deleteField, moveField, updateField } from "./actions";
+import { addField, deleteField, moveField, saveBuiltinFields, updateField } from "./actions";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ entity?: string; error?: string }> };
 const selectClass = "h-8 rounded-lg border border-input bg-transparent px-2 text-sm";
@@ -21,7 +22,8 @@ export default async function CustomFieldsPage({ params, searchParams }: Props) 
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
   const entity = (ENTITIES.find((e) => e.value === sp.entity)?.value ?? "contact") as CustomEntity;
-  const fields = await getCustomFields(ws.id, entity);
+  const [fields, hidden] = await Promise.all([getCustomFields(ws.id, entity), getHiddenFields(ws.id, entity)]);
+  const builtins = BUILTIN_FIELDS[entity] ?? [];
   const canEdit = ws.role === "owner" || ws.role === "admin";
   const typeLabel = (t: string) => FIELD_TYPES.find((x) => x.value === t)?.label ?? t;
 
@@ -46,6 +48,31 @@ export default async function CustomFieldsPage({ params, searchParams }: Props) 
         ))}
       </nav>
       {sp.error && <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{sp.error}</p>}
+
+      {builtins.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="font-medium">Built-in fields</h2>
+            <p className="text-sm text-muted-foreground">
+              Untick a field to hide it from forms. Data already saved in it is kept and comes back if you switch it on again.
+              Names, email and company are always shown.
+            </p>
+          </div>
+          <form action={saveBuiltinFields.bind(null, slug, entity)} className="flex flex-col gap-3 rounded-md border p-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {builtins.map((b) => (
+                <label key={b.key} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name={`show:${b.key}`} defaultChecked={!hidden.includes(b.key)} disabled={!canEdit} className="size-4 accent-primary" />
+                  {b.label}
+                </label>
+              ))}
+            </div>
+            {canEdit && <Button type="submit" variant="outline" size="sm" className="w-fit">Save built-in fields</Button>}
+          </form>
+        </section>
+      )}
+
+      <h2 className="-mb-3 font-medium">Your custom fields</h2>
 
       {fields.length ? (
         <ol className="flex flex-col divide-y rounded-md border">

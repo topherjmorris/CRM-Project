@@ -6,6 +6,7 @@
 import { useActionState } from "react";
 import { CustomFieldsSection } from "@/components/custom-fields-section";
 import type { CustomFieldDef } from "@/lib/custom-fields";
+import { isHidden } from "@/lib/builtin-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,8 @@ type Props = {
   // Workspace custom fields for this record type, and their current values as strings.
   customDefs?: CustomFieldDef[];
   customValues?: Record<string, string>;
+  // Built-in fields this workspace has switched off (Settings → Custom fields).
+  hidden?: string[];
   submitLabel: string;
   savedMessage?: string;
 };
@@ -42,7 +45,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
+export function LeadForm({ action, initial, members, stages, submitLabel, savedMessage, customDefs = [], customValues = {}, hidden = [] }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -66,9 +69,13 @@ export function LeadForm({ action, initial, members, stages, submitLabel, savedM
         <Field id="company_name" label="Company">
           <Input id="company_name" name="company_name" defaultValue={v.company_name} maxLength={200} />
         </Field>
-        <Field id="job_title" label="Job title">
+        {isHidden(hidden, "job_title") ? (
+          <input type="hidden" name="job_title" value={v.job_title ?? ""} />
+        ) : (
+          <Field id="job_title" label="Job title">
           <Input id="job_title" name="job_title" defaultValue={v.job_title} maxLength={120} />
         </Field>
+        )}
         <Field id="stage_id" label="Stage">
           <select id="stage_id" name="stage_id" defaultValue={v.stage_id || stages[0]?.id} className={selectClass}>
             {stages.map((s) => (
@@ -83,9 +90,13 @@ export function LeadForm({ action, initial, members, stages, submitLabel, savedM
             ))}
           </select>
         </Field>
-        <Field id="linkedin_url" label="LinkedIn URL">
+        {isHidden(hidden, "linkedin_url") ? (
+          <input type="hidden" name="linkedin_url" value={v.linkedin_url ?? ""} />
+        ) : (
+          <Field id="linkedin_url" label="LinkedIn URL">
           <Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/in/…" />
         </Field>
+        )}
         <Field id="owner_id" label="Owner">
           <select id="owner_id" name="owner_id" defaultValue={v.owner_id ?? ""} className={selectClass}>
             <option value="">No owner</option>
@@ -96,7 +107,7 @@ export function LeadForm({ action, initial, members, stages, submitLabel, savedM
         </Field>
       </div>
       <p className="-mt-2 text-xs text-muted-foreground">An email or a phone number is required.</p>
-      <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
+      <DetailFields hidden={hidden} values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
       <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={3} maxLength={10000} />

@@ -6,6 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { BUILTIN_FIELDS } from "@/lib/builtin-fields";
 import { FIELD_TYPES, keyFromLabel, type CustomEntity, type CustomFieldType } from "@/lib/custom-fields";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
@@ -85,4 +86,19 @@ export async function deleteField(slug: string, entity: CustomEntity, id: string
   const supabase = await createClient();
   const { error } = await supabase.from("custom_fields").delete().eq("id", id);
   done(slug, entity, error?.message);
+}
+
+// Saves which optional built-in fields are shown: ticked = shown, unticked = hidden.
+export async function saveBuiltinFields(slug: string, entity: CustomEntity, formData: FormData) {
+  const ws = await requireAdmin(slug);
+  if (!ws) done(slug, entity, "Only owners and admins can change fields.");
+  const fields = BUILTIN_FIELDS[entity] ?? [];
+  const hidden = fields.filter((f) => formData.get(`show:${f.key}`) !== "on").map((f) => f.key);
+  const supabase = await createClient();
+  await supabase.from("hidden_fields").delete().eq("workspace_id", ws.id).eq("entity", entity);
+  if (hidden.length) {
+    const { error } = await supabase.from("hidden_fields").insert(hidden.map((field) => ({ workspace_id: ws.id, entity, field })));
+    if (error) done(slug, entity, error.message);
+  }
+  done(slug, entity);
 }

@@ -5,6 +5,7 @@
 import { useActionState } from "react";
 import { CustomFieldsSection } from "@/components/custom-fields-section";
 import type { CustomFieldDef } from "@/lib/custom-fields";
+import { ADDRESS_FIELDS, isHidden } from "@/lib/builtin-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,8 @@ type Props = {
   // Workspace custom fields for this record type, and their current values as strings.
   customDefs?: CustomFieldDef[];
   customValues?: Record<string, string>;
+  // Built-in fields this workspace has switched off (Settings → Custom fields).
+  hidden?: string[];
   submitLabel: string;
   savedMessage?: string;
 };
@@ -38,7 +41,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function CompanyForm({ action, initial, members, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
+export function CompanyForm({ action, initial, members, submitLabel, savedMessage, customDefs = [], customValues = {}, hidden = [] }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -52,13 +55,24 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
         <Field id="name" label="Company name" required>
           <Input id="name" name="name" required defaultValue={v.name} maxLength={200} autoComplete="off" />
         </Field>
-        <Field id="domain" label="Website">
+        {isHidden(hidden, "domain") ? (
+          <input type="hidden" name="domain" value={v.domain ?? ""} />
+        ) : (
+          <Field id="domain" label="Website">
           <Input id="domain" name="domain" defaultValue={v.domain} placeholder="acme.com" autoComplete="off" />
         </Field>
-        <Field id="industry" label="Industry">
+        )}
+        {isHidden(hidden, "industry") ? (
+          <input type="hidden" name="industry" value={v.industry ?? ""} />
+        ) : (
+          <Field id="industry" label="Industry">
           <Input id="industry" name="industry" defaultValue={v.industry} maxLength={120} placeholder="Plumbing, dental, retail…" />
         </Field>
-        <Field id="size" label="Employees">
+        )}
+        {isHidden(hidden, "size") ? (
+          <input type="hidden" name="size" value={v.size ?? ""} />
+        ) : (
+          <Field id="size" label="Employees">
           <select id="size" name="size" defaultValue={v.size ?? ""} className={selectClass}>
             <option value="">Unknown</option>
             {COMPANY_SIZES.map((s) => (
@@ -66,7 +80,11 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
             ))}
           </select>
         </Field>
-        <Field id="company_type" label="Type">
+        )}
+        {isHidden(hidden, "company_type") ? (
+          <input type="hidden" name="company_type" value={v.company_type ?? ""} />
+        ) : (
+          <Field id="company_type" label="Type">
           <select id="company_type" name="company_type" defaultValue={v.company_type ?? ""} className={selectClass}>
             <option value="">Not set</option>
             {COMPANY_TYPES.map((t) => (
@@ -74,7 +92,11 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
             ))}
           </select>
         </Field>
-        <Field id="annual_revenue" label="Annual revenue">
+        )}
+        {isHidden(hidden, "annual_revenue") ? (
+          <input type="hidden" name="annual_revenue" value={v.annual_revenue ?? ""} />
+        ) : (
+          <Field id="annual_revenue" label="Annual revenue">
           <select id="annual_revenue" name="annual_revenue" defaultValue={v.annual_revenue ?? ""} className={selectClass}>
             <option value="">Unknown</option>
             {REVENUE_RANGES.map((r) => (
@@ -82,9 +104,14 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
             ))}
           </select>
         </Field>
-        <Field id="phone" label="Phone">
+        )}
+        {isHidden(hidden, "phone") ? (
+          <input type="hidden" name="phone" value={v.phone ?? ""} />
+        ) : (
+          <Field id="phone" label="Phone">
           <Input id="phone" name="phone" type="tel" defaultValue={v.phone} maxLength={40} />
         </Field>
+        )}
         <Field id="owner_id" label="Owner">
           <select id="owner_id" name="owner_id" defaultValue={v.owner_id ?? ""} className={selectClass}>
             <option value="">No owner</option>
@@ -95,16 +122,37 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
         </Field>
       </div>
       {/* Social links and address, collapsed unless any are filled in. */}
-      <details open={COMPANY_EXTRA_FIELDS.some((f) => v[f])} className="rounded-lg border px-4 py-3 open:pb-4">
+      <details
+        hidden={["linkedin_url", "facebook_url", "instagram_url", "x_url", "address"].every((f) => hidden.includes(f))}
+        open={COMPANY_EXTRA_FIELDS.some((f) => v[f])} className="rounded-lg border px-4 py-3 open:pb-4">
         <summary className="cursor-pointer text-sm font-medium select-none">More details: social links, address</summary>
         <div className="mt-4 flex flex-col gap-5">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="linkedin_url" label="LinkedIn page"><Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/company/…" /></Field>
-            <Field id="facebook_url" label="Facebook"><Input id="facebook_url" name="facebook_url" defaultValue={v.facebook_url} placeholder="facebook.com/…" /></Field>
-            <Field id="instagram_url" label="Instagram"><Input id="instagram_url" name="instagram_url" defaultValue={v.instagram_url} placeholder="instagram.com/…" /></Field>
-            <Field id="x_url" label="X (Twitter)"><Input id="x_url" name="x_url" defaultValue={v.x_url} placeholder="x.com/…" /></Field>
+            {isHidden(hidden, "linkedin_url") ? (
+              <input type="hidden" name="linkedin_url" value={v.linkedin_url ?? ""} />
+            ) : (
+              <Field id="linkedin_url" label="LinkedIn page"><Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/company/…" /></Field>
+            )}
+            {isHidden(hidden, "facebook_url") ? (
+              <input type="hidden" name="facebook_url" value={v.facebook_url ?? ""} />
+            ) : (
+              <Field id="facebook_url" label="Facebook"><Input id="facebook_url" name="facebook_url" defaultValue={v.facebook_url} placeholder="facebook.com/…" /></Field>
+            )}
+            {isHidden(hidden, "instagram_url") ? (
+              <input type="hidden" name="instagram_url" value={v.instagram_url ?? ""} />
+            ) : (
+              <Field id="instagram_url" label="Instagram"><Input id="instagram_url" name="instagram_url" defaultValue={v.instagram_url} placeholder="instagram.com/…" /></Field>
+            )}
+            {isHidden(hidden, "x_url") ? (
+              <input type="hidden" name="x_url" value={v.x_url ?? ""} />
+            ) : (
+              <Field id="x_url" label="X (Twitter)"><Input id="x_url" name="x_url" defaultValue={v.x_url} placeholder="x.com/…" /></Field>
+            )}
           </div>
-          <fieldset className="grid gap-4 sm:grid-cols-2">
+          {isHidden(hidden, "address") ? (
+            ADDRESS_FIELDS.map((f) => <input key={f} type="hidden" name={f} value={v[f] ?? ""} />)
+          ) : (
+            <fieldset className="grid gap-4 sm:grid-cols-2">
             <legend className="mb-2 text-sm font-medium">Address</legend>
             <div className="sm:col-span-2"><Field id="address_line1" label="Street address"><Input id="address_line1" name="address_line1" defaultValue={v.address_line1} maxLength={200} /></Field></div>
             <div className="sm:col-span-2"><Field id="address_line2" label="Suite, floor, etc."><Input id="address_line2" name="address_line2" defaultValue={v.address_line2} maxLength={200} /></Field></div>
@@ -113,6 +161,7 @@ export function CompanyForm({ action, initial, members, submitLabel, savedMessag
             <Field id="postal_code" label="Postal code"><Input id="postal_code" name="postal_code" defaultValue={v.postal_code} maxLength={20} /></Field>
             <Field id="country" label="Country"><Input id="country" name="country" defaultValue={v.country} maxLength={100} /></Field>
           </fieldset>
+          )}
         </div>
       </details>
       <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />

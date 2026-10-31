@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { COMPANY_EXTRA_FIELDS, revenueLabel, typeLabel, type CompanyInput } from "@/lib/companies";
 import { contactName, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
-import { getCustomFields } from "@/lib/custom-fields-server";
+import { getCustomFields, getHiddenFields } from "@/lib/custom-fields-server";
 import { customToInputs } from "@/lib/custom-fields";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { getTimeline } from "@/lib/activities";
@@ -26,7 +26,7 @@ export default async function CompanyPage({ params }: Props) {
   const { slug, id } = await params;
   const ws = await getWorkspaceBySlug(slug);
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const customDefs = await getCustomFields(ws.id, "company");
+  const [customDefs, hiddenFields] = await Promise.all([getCustomFields(ws.id, "company"), getHiddenFields(ws.id, "company")]);
 
   const supabase = await createClient();
   const [{ data: c }, { data: people }, members] = await Promise.all([
@@ -117,6 +117,7 @@ export default async function CompanyPage({ params }: Props) {
       <section className="flex flex-col gap-3">
         <h3 className="font-medium">Details</h3>
         <CompanyForm
+        hidden={hiddenFields}
         customDefs={customDefs}
         customValues={customToInputs(customDefs, c.custom)}
           key={c.updated_at}

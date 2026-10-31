@@ -29,3 +29,10 @@ export async function readCustomFor(workspaceId: string, entity: CustomEntity, f
   }
   return readCustom(formData, defs, existing);
 }
+
+// Built-in fields this workspace has switched off for a record type.
+export async function getHiddenFields(workspaceId: string, entity: CustomEntity): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("hidden_fields").select("field").eq("workspace_id", workspaceId).eq("entity", entity);
+  return (data ?? []).map((r) => r.field);
+}

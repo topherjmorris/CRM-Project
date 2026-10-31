@@ -508,6 +508,35 @@ export type Database = {
           },
         ]
       }
+      hidden_fields: {
+        Row: {
+          created_at: string
+          entity: Database["public"]["Enums"]["custom_entity"]
+          field: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity: Database["public"]["Enums"]["custom_entity"]
+          field: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          entity?: Database["public"]["Enums"]["custom_entity"]
+          field?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hidden_fields_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_stages: {
         Row: {
           created_at: string

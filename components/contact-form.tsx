@@ -6,6 +6,7 @@
 import { useActionState } from "react";
 import { CustomFieldsSection } from "@/components/custom-fields-section";
 import type { CustomFieldDef } from "@/lib/custom-fields";
+import { isHidden } from "@/lib/builtin-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,8 @@ type Props = {
   // Workspace custom fields for this record type, and their current values as strings.
   customDefs?: CustomFieldDef[];
   customValues?: Record<string, string>;
+  // Built-in fields this workspace has switched off (Settings → Custom fields).
+  hidden?: string[];
   submitLabel: string;
   savedMessage?: string;
 };
@@ -39,7 +42,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function ContactForm({ action, initial, members, companies, submitLabel, savedMessage, customDefs = [], customValues = {} }: Props) {
+export function ContactForm({ action, initial, members, companies, submitLabel, savedMessage, customDefs = [], customValues = {}, hidden = [] }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -59,12 +62,20 @@ export function ContactForm({ action, initial, members, companies, submitLabel, 
         <Field id="email" label="Email" required>
           <Input id="email" name="email" required type="email" defaultValue={v.email} autoComplete="off" />
         </Field>
-        <Field id="phone" label="Phone">
+        {isHidden(hidden, "phone") ? (
+          <input type="hidden" name="phone" value={v.phone ?? ""} />
+        ) : (
+          <Field id="phone" label="Phone">
           <Input id="phone" name="phone" type="tel" defaultValue={v.phone} maxLength={40} autoComplete="off" />
         </Field>
-        <Field id="job_title" label="Job title">
+        )}
+        {isHidden(hidden, "job_title") ? (
+          <input type="hidden" name="job_title" value={v.job_title ?? ""} />
+        ) : (
+          <Field id="job_title" label="Job title">
           <Input id="job_title" name="job_title" defaultValue={v.job_title} maxLength={120} />
         </Field>
+        )}
         <Field id="company_name" label="Company" required>
           <Input id="company_name" name="company_name" required defaultValue={v.company_name} maxLength={200} list="company-options" autoComplete="off" />
           <datalist id="company-options">
@@ -73,9 +84,13 @@ export function ContactForm({ action, initial, members, companies, submitLabel, 
             ))}
           </datalist>
         </Field>
-        <Field id="linkedin_url" label="LinkedIn URL">
+        {isHidden(hidden, "linkedin_url") ? (
+          <input type="hidden" name="linkedin_url" value={v.linkedin_url ?? ""} />
+        ) : (
+          <Field id="linkedin_url" label="LinkedIn URL">
           <Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/in/…" />
         </Field>
+        )}
         <Field id="owner_id" label="Owner">
           <select
             id="owner_id"
@@ -90,7 +105,7 @@ export function ContactForm({ action, initial, members, companies, submitLabel, 
           </select>
         </Field>
       </div>
-      <DetailFields values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
+      <DetailFields hidden={hidden} values={Object.fromEntries(DETAIL_FIELDS.map((f) => [f, v[f] ?? ""]))} />
       <CustomFieldsSection defs={customDefs} values={state.custom ?? customValues} />
       <Field id="notes" label="Notes">
         <Textarea id="notes" name="notes" defaultValue={v.notes} rows={4} maxLength={10000} />
