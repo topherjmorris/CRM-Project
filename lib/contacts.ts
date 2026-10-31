@@ -32,3 +32,10 @@ export async function getMembers(workspaceId: string): Promise<Member[]> {
     .map((p) => ({ id: p.id, label: p.full_name || p.email || "Unknown user" }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
+
+// Company names for the contact form's suggestions.
+export async function getCompanyNames(workspaceId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("companies").select("name").eq("workspace_id", workspaceId).order("name").limit(1000);
+  return (data ?? []).map((c) => c.name);
+}

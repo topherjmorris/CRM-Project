@@ -12,6 +12,7 @@ type Props = {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   initial: ContactInput;
   members: Member[];
+  companies: string[];
   submitLabel: string;
   savedMessage?: string;
 };
@@ -28,7 +29,7 @@ function Field({ id, label, required, children }: { id: string; label: string; r
   );
 }
 
-export function ContactForm({ action, initial, members, submitLabel, savedMessage }: Props) {
+export function ContactForm({ action, initial, members, companies, submitLabel, savedMessage }: Props) {
   const [state, formAction, pending] = useActionState(action, { values: initial });
   const v = state.values ?? initial;
   const saved = savedMessage && !pending && !state.error && state.values !== initial;
@@ -55,7 +56,12 @@ export function ContactForm({ action, initial, members, submitLabel, savedMessag
           <Input id="job_title" name="job_title" defaultValue={v.job_title} maxLength={120} />
         </Field>
         <Field id="company_name" label="Company" required>
-          <Input id="company_name" name="company_name" required defaultValue={v.company_name} maxLength={200} />
+          <Input id="company_name" name="company_name" required defaultValue={v.company_name} maxLength={200} list="company-options" autoComplete="off" />
+          <datalist id="company-options">
+            {companies.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </Field>
         <Field id="linkedin_url" label="LinkedIn URL">
           <Input id="linkedin_url" name="linkedin_url" defaultValue={v.linkedin_url} placeholder="linkedin.com/in/…" />

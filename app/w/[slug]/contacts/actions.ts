@@ -37,11 +37,26 @@ function toRow(v: ContactInput) {
     email: v.email ? v.email.toLowerCase() : null,
     phone: v.phone || null,
     job_title: v.job_title || null,
-    company_name: v.company_name || null,
     linkedin_url: linkedin,
     notes: v.notes || null,
     owner_id: v.owner_id || null,
   };
+}
+
+// Find the workspace's company with this name (case-insensitive), or create it.
+async function resolveCompany(workspaceId: string, name: string): Promise<string> {
+  const supabase = await createClient();
+  const escaped = name.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+  const { data: found } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("workspace_id", workspaceId)
+    .ilike("name", escaped)
+    .maybeSingle();
+  if (found) return found.id;
+  const { data, error } = await supabase.from("companies").insert({ workspace_id: workspaceId, name }).select("id").single();
+  if (error) throw new Error(error.message);
+  return data.id;
 }
 
 function friendly(error: { code?: string; message: string }) {
@@ -58,10 +73,11 @@ export async function createContact(slug: string, _prev: FormState, formData: Fo
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) return { error: "Workspace not found.", values };
 
+  const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contacts")
-    .insert({ ...toRow(values), workspace_id: ws.id })
+    .insert({ ...toRow(values), company_id, workspace_id: ws.id })
     .select("id")
     .single();
   if (error) return { error: friendly(error), values };
@@ -74,12 +90,16 @@ export async function updateContact(slug: string, id: string, _prev: FormState, 
   const values = readForm(formData);
   const gap = missing(values);
   if (gap) return { error: gap, values };
+  const ws = await getWorkspaceBySlug(slug);
+  if (!ws) return { error: "Workspace not found.", values };
+  const company_id = await resolveCompany(ws.id, values.company_name!);
   const supabase = await createClient();
-  const { error } = await supabase.from("contacts").update(toRow(values)).eq("id", id);
+  const { error } = await supabase.from("contacts").update({ ...toRow(values), company_id }).eq("id", id);
   if (error) return { error: friendly(error), values };
 
   revalidatePath(`/w/${slug}/contacts`);
   revalidatePath(`/w/${slug}/contacts/${id}`);
+  revalidatePath(`/w/${slug}/companies`, "layout");
   return { values };
 }
 

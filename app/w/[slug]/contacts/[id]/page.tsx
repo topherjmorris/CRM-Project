@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";
-import { DeleteContactButton } from "@/components/delete-contact-button";
-import { contactName, getMembers, type ContactInput } from "@/lib/contacts";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
+import { contactName, getCompanyNames, getMembers, type ContactInput } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { deleteContact, updateContact } from "../actions";
@@ -15,9 +15,10 @@ export default async function ContactPage({ params }: Props) {
   if (!ws || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
-  const [{ data: c }, members] = await Promise.all([
+  const [{ data: c }, members, companies] = await Promise.all([
     supabase.from("contacts").select("*").eq("id", id).eq("workspace_id", ws.id).maybeSingle(),
     getMembers(ws.id),
+    getCompanyNames(ws.id),
   ]);
   if (!c) notFound();
 
@@ -41,17 +42,28 @@ export default async function ContactPage({ params }: Props) {
           <Link href={`/w/${slug}/contacts`} className="text-sm text-muted-foreground hover:underline">← Contacts</Link>
           <h2 className="mt-1 truncate text-2xl font-semibold">{name}</h2>
           <p className="text-sm text-muted-foreground">
-            {[c.job_title, c.company_name].filter(Boolean).join(" at ") || "No title or company yet"} · Added{" "}
+            {c.job_title && <>{c.job_title} at </>}
+            {c.company_id ? (
+              <Link href={`/w/${slug}/companies/${c.company_id}`} className="underline-offset-2 hover:underline">{c.company_name}</Link>
+            ) : (
+              c.company_name || "No company"
+            )} · Added{" "}
             {new Date(c.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
           </p>
         </div>
-        <DeleteContactButton name={name} action={deleteContact.bind(null, slug, c.id)} />
+        <ConfirmDeleteButton
+          name={name}
+          description="This removes the contact for everyone in this workspace. It can't be undone."
+          confirmLabel="Delete contact"
+          action={deleteContact.bind(null, slug, c.id)}
+        />
       </div>
       <ContactForm
         key={c.updated_at}
         action={updateContact.bind(null, slug, c.id)}
         initial={initial}
         members={members}
+        companies={companies}
         submitLabel="Save changes"
         savedMessage="Saved"
       />

@@ -39,8 +39,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain: string | null
+          id: string
+          industry: string | null
+          name: string
+          notes: string | null
+          owner_id: string | null
+          phone: string | null
+          size: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          size?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          size?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
+          company_id: string | null
           company_name: string | null
           created_at: string
           created_by: string | null
@@ -59,6 +113,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          company_id?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -77,6 +132,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          company_id?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -95,6 +151,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contacts_workspace_id_fkey"
             columns: ["workspace_id"]

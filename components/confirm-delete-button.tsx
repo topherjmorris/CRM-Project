@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-export function DeleteContactButton({ name, action }: { name: string; action: () => Promise<void> }) {
+type Props = { name: string; description: string; confirmLabel: string; action: () => Promise<void> };
+
+export function ConfirmDeleteButton({ name, description, confirmLabel, action }: Props) {
   return (
     <AlertDialog>
       <AlertDialogTrigger render={<Button variant="outline" size="sm" />}>
@@ -23,12 +25,12 @@ export function DeleteContactButton({ name, action }: { name: string; action: ()
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
-          <AlertDialogDescription>This removes the contact for everyone in this workspace. It can&apos;t be undone.</AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <form action={action}>
-            <AlertDialogAction type="submit" variant="destructive">Delete contact</AlertDialogAction>
+            <AlertDialogAction type="submit" variant="destructive">{confirmLabel}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>

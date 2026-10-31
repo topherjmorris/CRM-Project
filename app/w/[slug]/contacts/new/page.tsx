@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contact-form";
-import { getMembers } from "@/lib/contacts";
+import { getCompanyNames, getMembers } from "@/lib/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 import { createContact } from "../actions";
@@ -11,7 +11,7 @@ export default async function NewContactPage({ params }: { params: Promise<{ slu
   const ws = await getWorkspaceBySlug(slug);
   if (!ws) notFound();
   const supabase = await createClient();
-  const [{ data: auth }, members] = await Promise.all([supabase.auth.getUser(), getMembers(ws.id)]);
+  const [{ data: auth }, members, companies] = await Promise.all([supabase.auth.getUser(), getMembers(ws.id), getCompanyNames(ws.id)]);
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -23,6 +23,7 @@ export default async function NewContactPage({ params }: { params: Promise<{ slu
         action={createContact.bind(null, slug)}
         initial={{ owner_id: auth.user?.id }}
         members={members}
+        companies={companies}
         submitLabel="Create contact"
       />
     </div>
