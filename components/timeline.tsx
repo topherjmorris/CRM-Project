@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { ArrowRight, Building2, CheckCircle2, ListTodo, RotateCcw, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
+import { ArrowRight, ArrowRightLeft, Building2, UserRoundSearch, CheckCircle2, ListTodo, RotateCcw, Handshake, Pencil, StickyNote, Trash2, Trophy, UserPlus, Users, XCircle, type LucideIcon } from "lucide-react";
 import { addNote, deleteNote, updateNote, type NoteState } from "@/app/w/[slug]/activities/actions";
 import { LocalDateTime, toLocalInput } from "@/components/local-datetime";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,10 @@ const ICONS: Record<string, LucideIcon> = {
   deal_won: Trophy,
   deal_lost: XCircle,
   deal_contact_added: Users,
+  lead_created: UserRoundSearch,
+  lead_status_changed: ArrowRight,
+  lead_updated: Pencil,
+  lead_converted: ArrowRightLeft,
   task_created: ListTodo,
   task_completed: CheckCircle2,
   task_reopened: RotateCcw,
@@ -77,6 +81,8 @@ function Changes({ item }: { item: TimelineItem }) {
   );
 }
 
+const LEAD_STATUS: Record<string, string> = { new: "New", contacted: "Contacted", qualified: "Qualified", unqualified: "Unqualified" };
+
 function str(meta: unknown, key: string) {
   const v = (meta as Record<string, unknown> | null)?.[key];
   return v === undefined || v === null ? "" : String(v);
@@ -111,6 +117,21 @@ function Describe({ item, slug, subject }: { item: TimelineItem; slug: string; s
       return <>{dealLink ?? "Deal"} won · {formatMoney(Number(str(m, "value") || 0))}</>;
     case "deal_lost":
       return <>{dealLink ?? "Deal"} marked lost</>;
+    case "lead_created":
+      return <>Lead added{str(m, "source") && str(m, "source") !== "manual" ? <> from {str(m, "source")}</> : null}</>;
+    case "lead_status_changed":
+      return <>Lead moved from {LEAD_STATUS[str(m, "from")] ?? str(m, "from")} to {LEAD_STATUS[str(m, "to")] ?? str(m, "to")}</>;
+    case "lead_updated":
+      return <>Lead updated</>;
+    case "lead_converted":
+      return (
+        <>
+          {subject.kind === "lead" ? "Converted to " : "Converted from a lead"}
+          {subject.kind === "lead" && contactLink}
+          {str(m, "existing_contact") === "true" && " (existing contact)"}
+          {dealLink && <> · deal {dealLink} created</>}
+        </>
+      );
     case "task_created":
     case "task_completed":
     case "task_reopened": {

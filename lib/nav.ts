@@ -9,6 +9,7 @@ import {
   Megaphone,
   Send,
   Settings,
+  UserRoundSearch,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "CRM",
     items: [
+      { title: "Leads", path: "leads", icon: UserRoundSearch, phase: "CRM core" },
       { title: "Contacts", path: "contacts", icon: Users, phase: "CRM core" },
       { title: "Companies", path: "companies", icon: Building2, phase: "CRM core" },
       { title: "Deals", path: "deals", icon: Handshake, phase: "CRM core" },

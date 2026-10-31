@@ -48,6 +48,7 @@ export type Database = {
           created_at: string
           deal_id: string | null
           id: string
+          lead_id: string | null
           meta: Json
           occurred_at: string
           type: string
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           deal_id?: string | null
           id?: string
+          lead_id?: string | null
           meta?: Json
           occurred_at?: string
           type: string
@@ -76,6 +78,7 @@ export type Database = {
           created_at?: string
           deal_id?: string | null
           id?: string
+          lead_id?: string | null
           meta?: Json
           occurred_at?: string
           type?: string
@@ -102,6 +105,13 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
           {
@@ -363,6 +373,84 @@ export type Database = {
           },
           {
             foreignKeyName: "deals_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          company_name: string | null
+          converted_at: string | null
+          converted_contact_id: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string
+          id: string
+          job_title: string | null
+          last_name: string
+          linkedin_url: string | null
+          notes: string | null
+          owner_id: string | null
+          phone: string | null
+          source: string
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          company_name?: string | null
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_converted_contact_id_fkey"
+            columns: ["converted_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -664,6 +752,21 @@ export type Database = {
         Args: { new_row: Json; old_row: Json; skip: string[] }
         Returns: Json
       }
+      convert_lead: {
+        Args: {
+          p_company_name: string
+          p_deal_name?: string
+          p_deal_value?: number
+          p_email: string
+          p_first_name: string
+          p_job_title: string
+          p_last_name: string
+          p_lead_id: string
+          p_phone: string
+          p_stage_id?: string
+        }
+        Returns: string
+      }
       create_default_pipeline: { Args: { ws: string }; Returns: string }
       create_workspace: {
         Args: { ws_name: string; ws_slug: string }
@@ -709,6 +812,12 @@ export type Database = {
       }
     }
     Enums: {
+      lead_status:
+        | "new"
+        | "contacted"
+        | "qualified"
+        | "unqualified"
+        | "converted"
       stage_kind: "open" | "won" | "lost"
       task_type: "todo" | "call" | "linkedin" | "email"
       workspace_role: "owner" | "admin" | "member"
@@ -842,6 +951,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      lead_status: [
+        "new",
+        "contacted",
+        "qualified",
+        "unqualified",
+        "converted",
+      ],
       stage_kind: ["open", "won", "lost"],
       task_type: ["todo", "call", "linkedin", "email"],
       workspace_role: ["owner", "admin", "member"],

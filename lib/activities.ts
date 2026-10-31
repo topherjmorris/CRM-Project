@@ -11,7 +11,7 @@ export type TimelineItem = Activity & {
   contact_label: string | null;
   deal_label: string | null;
 };
-export type TimelineSubject = { kind: "contact" | "company" | "deal"; id: string };
+export type TimelineSubject = { kind: "contact" | "company" | "deal" | "lead"; id: string };
 
 const LIMIT = 100;
 

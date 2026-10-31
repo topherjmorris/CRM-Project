@@ -1,0 +1,129 @@
+"use server";
+
+// Lead actions: create, update, delete and convert.
+// Leads need a first and last name plus an email or phone. Converting runs the
+// convert_lead() database function (migration 20261031000001_leads.sql), which
+// creates the contact, company and optional deal in one transaction.
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { LEAD_FIELDS, LEAD_STATUSES, type LeadInput, type LeadStatus } from "@/lib/leads";
+import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceBySlug } from "@/lib/workspaces";
+
+export type LeadFormState = { error?: string; values?: LeadInput };
+
+function readForm(formData: FormData): LeadInput {
+  const v: LeadInput = {};
+  for (const f of LEAD_FIELDS) v[f] = String(formData.get(f) ?? "").trim();
+  return v;
+}
+
+function validate(v: LeadInput) {
+  const gaps = [!v.first_name && "first name", !v.last_name && "last name"].filter(Boolean);
+  if (gaps.length) return `Please fill in: ${gaps.join(", ")}.`;
+  if (!v.email && !v.phone) return "Add an email or a phone number.";
+  if (v.status && !LEAD_STATUSES.some((s) => s.value === v.status)) return "Pick a status.";
+}
+
+function toRow(v: LeadInput) {
+  let linkedin = v.linkedin_url || null;
+  if (linkedin && !/^https?:\/\//i.test(linkedin)) linkedin = `https://${linkedin}`;
+  return {
+    first_name: v.first_name ?? "",
+    last_name: v.last_name ?? "",
+    email: v.email ? v.email.toLowerCase() : null,
+    phone: v.phone || null,
+    job_title: v.job_title || null,
+    company_name: v.company_name || null,
+    linkedin_url: linkedin,
+    source: v.source || "manual",
+    status: (v.status || "new") as LeadStatus,
+    notes: v.notes || null,
+    owner_id: v.owner_id || null,
+  };
+}
+
+function friendly(error: { message: string }) {
+  if (error.message.includes("email_check")) return "That email address doesn't look right.";
+  return error.message;
+}
+
+function refresh(slug: string) {
+  revalidatePath(`/w/${slug}`, "layout");
+}
+
+export async function createLead(slug: string, _prev: LeadFormState, formData: FormData): Promise<LeadFormState> {
+  const values = readForm(formData);
+  const invalid = validate(values);
+  if (invalid) return { error: invalid, values };
+  const ws = await getWorkspaceBySlug(slug);
+  if (!ws) return { error: "Workspace not found.", values };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("leads").insert({ ...toRow(values), workspace_id: ws.id }).select("id").single();
+  if (error) return { error: friendly(error), values };
+  refresh(slug);
+  redirect(`/w/${slug}/leads/${data.id}`);
+}
+
+export async function updateLead(slug: string, id: string, _prev: LeadFormState, formData: FormData): Promise<LeadFormState> {
+  const values = readForm(formData);
+  const invalid = validate(values);
+  if (invalid) return { error: invalid, values };
+  const supabase = await createClient();
+  // Converted leads are read-only; the filter keeps an old tab from editing one.
+  const { error } = await supabase.from("leads").update(toRow(values)).eq("id", id).neq("status", "converted");
+  if (error) return { error: friendly(error), values };
+  refresh(slug);
+  return { values };
+}
+
+export async function deleteLead(slug: string, id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("leads").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  refresh(slug);
+  redirect(`/w/${slug}/leads`);
+}
+
+export type ConvertState = { error?: string; values?: Record<string, string> };
+
+export async function convertLead(slug: string, id: string, _prev: ConvertState, formData: FormData): Promise<ConvertState> {
+  const v = Object.fromEntries(
+    ["first_name", "last_name", "email", "phone", "job_title", "company_name", "create_deal", "deal_name", "deal_value", "stage_id"].map((f) => [
+      f,
+      String(formData.get(f) ?? "").trim(),
+    ]),
+  );
+  // Same requirements as adding a contact by hand.
+  const gaps = [
+    !v.first_name && "first name",
+    !v.last_name && "last name",
+    !v.email && "email",
+    !v.company_name && "company",
+  ].filter(Boolean);
+  if (gaps.length) return { error: `Please fill in: ${gaps.join(", ")}.`, values: v };
+
+  const withDeal = v.create_deal === "on";
+  const value = Number((v.deal_value || "0").replace(/[$,\s]/g, ""));
+  if (withDeal && !v.deal_name) return { error: "Give the deal a name, or untick “Also create a deal”.", values: v };
+  if (withDeal && (!Number.isFinite(value) || value < 0)) return { error: "Deal value must be a positive number.", values: v };
+
+  const supabase = await createClient();
+  const { data: contactId, error } = await supabase.rpc("convert_lead", {
+    p_lead_id: id,
+    p_first_name: v.first_name,
+    p_last_name: v.last_name,
+    p_email: v.email,
+    p_phone: v.phone,
+    p_job_title: v.job_title,
+    p_company_name: v.company_name,
+    p_deal_name: withDeal ? v.deal_name : undefined,
+    p_deal_value: withDeal ? value : undefined,
+    p_stage_id: withDeal ? v.stage_id : undefined,
+  });
+  if (error) return { error: error.message.includes("email_check") ? "That email address doesn't look right." : error.message, values: v };
+  refresh(slug);
+  redirect(`/w/${slug}/contacts/${contactId}`);
+}

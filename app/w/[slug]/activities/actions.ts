@@ -10,7 +10,7 @@ import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 export type NoteState = { error?: string; ok?: number };
 
-type Subject = { kind: "contact" | "company" | "deal"; id: string };
+type Subject = { kind: "contact" | "company" | "deal" | "lead"; id: string };
 
 function parseWhen(raw: FormDataEntryValue | null): string | null {
   const s = String(raw ?? "");
@@ -20,7 +20,7 @@ function parseWhen(raw: FormDataEntryValue | null): string | null {
 }
 
 function refresh(slug: string) {
-  for (const section of ["contacts", "companies", "deals"]) revalidatePath(`/w/${slug}/${section}`, "layout");
+  for (const section of ["contacts", "companies", "deals", "leads"]) revalidatePath(`/w/${slug}/${section}`, "layout");
 }
 
 export async function addNote(slug: string, subject: Subject, _prev: NoteState, formData: FormData): Promise<NoteState> {
@@ -50,6 +50,7 @@ export async function addNote(slug: string, subject: Subject, _prev: NoteState, 
     actor_id: auth.user!.id,
     contact_id: subject.kind === "contact" ? subject.id : null,
     deal_id: subject.kind === "deal" ? subject.id : null,
+    lead_id: subject.kind === "lead" ? subject.id : null,
     company_id,
   });
   if (error) return { error: error.message };
